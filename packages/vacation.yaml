@@ -1,0 +1,87 @@
+################################################
+## Packages / Vacation
+################################################
+homeassistant:
+
+################################################
+## Inputs
+################################################
+input_boolean:
+  vakantie:
+    name: Op vakantie
+    icon: mdi:airplane-takeoff
+    
+################################################
+## Automation
+################################################
+automation:
+
+################################################  
+# Switch on living room lights when on vacation and it turns dark outside
+################################################
+- alias: 'Schakel verlichting in tijdens vakantie'
+  trigger:
+    # Tuin licht sensor
+    - platform: numeric_state
+      entity_id: sensor.achtertuin_lux
+      below: 10
+  condition:
+    condition: state
+    entity_id: input_boolean.vakantie
+    state: 'on'
+  action:
+    - service: light.turn_on
+      data:
+        entity_id:
+          - light.woonkamer_lampen
+        brightness_pct: 50
+################################################
+
+################################################
+# Switch off livings room lights in vacation mode
+################################################
+- alias: 'Schakel verlichting uit tijdens vakantie'
+  trigger:
+    - platform: time
+      at: '22:30:00'
+  condition:
+    condition: state
+    entity_id: input_boolean.vakantie
+    state: 'on'
+  action:
+    - service: light.turn_off
+      data:
+        entity_id:
+          - light.woonkamer_lampen
+    - service: switch.turn_off
+      data:
+        entity_id:
+          - switch.wcd_schuurverlichting
+##########################################################
+      
+################################################
+# Switch on notifcations for IP camera in vacation mode
+################################################
+- alias: 'Schakel berichten in tijdens vakantie'
+  trigger: 
+    - platform: state
+      entity_id: input_boolean.vakantie
+      to: "on"
+  action:   
+  - service: homeassistant.turn_on
+    entity_id: input_boolean.camera1_notify
+#############################################################
+
+################################################
+# Switch off notifcations for IP camera in vacation mode
+################################################
+- alias: 'Schakel berichten uit tijdens vakantie'
+  trigger: 
+    - platform: state
+      entity_id: input_boolean.vakantie
+      to: "off"
+  action:   
+  - service: homeassistant.turn_off
+    entity_id: input_boolean.camera1_notify
+#############################################################
+    

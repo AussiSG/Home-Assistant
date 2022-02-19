@@ -1,0 +1,115 @@
+################################################
+## Packages / WCD TV, Audio, Consoles
+################################################
+homeassistant:
+  customize:
+    light.tv_audio_ps4:
+      icon: 'mdi:power-plug'
+
+################################################
+## Inputs
+################################################
+input_boolean:
+  record_on:
+    initial: false
+    icon: 'mdi:record-rec'
+    name: 'Opnemen na 01:00'
+
+################################################
+## Automation
+################################################
+
+automation:
+
+- alias: Reset record when set on
+  trigger:
+    platform: state
+    entity_id: input_boolean.record_on
+    to: 'on'
+    for:
+      hours: 12
+  action:
+    - service: input_boolean.turn_off
+      entity_id: input_boolean.record_on
+
+####### Schakel TV+Audio+PS4 in doordeweeks #######
+- alias: "TV+Audio+PS4 aan doordeweeks" 
+  trigger:
+    platform: time
+    at: '05:30:00'
+  condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: input_boolean.vakantie
+          state: 'off'
+        - condition: state
+          entity_id: 'binary_sensor.workday_sensor'
+          state: 'on'
+  action:
+    - service: homeassistant.turn_on
+      data:
+        entity_id: light.tv_audio_ps4
+###################################################
+
+####### Schakel TV+Audio+PS4 uit doordeweeks ######
+- alias: "TV+Audio+PS4 uit doordeweeks"
+  trigger:
+    platform: time
+    at: '01:00:00'
+  condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: input_boolean.record_on
+          state: 'off'
+        - condition: state
+          entity_id: 'binary_sensor.workday_sensor'
+          state: 'on'
+  action:
+    - service: homeassistant.turn_off
+      data:
+        entity_id: light.tv_audio_ps4
+###################################################
+
+######## Schakel TV+Audio+PS4 in weekend ########
+- alias: "TV+Audio+PS4 aan weekend"
+  trigger:
+    platform: time
+    at: '06:30:00'
+  condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: input_boolean.vakantie
+          state: 'off'
+        - condition: state
+          entity_id: 'binary_sensor.workday_sensor'
+          state: 'off'
+  action:
+    - service: homeassistant.turn_on
+      data:
+        entity_id: light.tv_audio_ps4
+###################################################
+
+###### Schakel TV+Audio+PS4 uit weekend ######
+- alias: "TV+Audio+PS4 uit weekend"
+  trigger:
+    platform: time
+    at: '01:00:00'
+  condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: input_boolean.record_on
+          state: 'off'
+        - condition: state
+          entity_id: 'binary_sensor.workday_sensor'
+          state: 'off'
+  action:
+    - service: homeassistant.turn_off
+      data:
+        entity_id: light.tv_audio_ps4
+###################################################
+
+

@@ -1,0 +1,237 @@
+################################################
+## Packages / Trash
+################################################
+
+homeassistant:
+  customize:
+    sensor.afvalwijzer_today:
+      friendly_name: Vandaag
+    sensor.afvalwijzer_tomorrow:
+      friendly_name: Morgen
+
+    sensor.afvalwijzer_gft:
+      friendly_name: GFT
+      entity_picture: /local/mijnafvalwijzer/gft3.png
+    sensor.afvalwijzer_papier:
+      friendly_name: Papier
+      entity_picture: /local/mijnafvalwijzer/papier3.png
+    sensor.afvalwijzer_pmd:
+      friendly_name: Plastic
+      entity_picture: /local/mijnafvalwijzer/plastic3.png
+    sensor.afvalwijzer_kerstbomen:
+      friendly_name: Kerstbomen
+      entity_picture: /local/mijnafvalwijzer/kerstbomen3.png
+
+    sensor.afvalwijzer_gft_next:
+      entity_picture: /local/mijnafvalwijzer/gft3.png
+    sensor.afvalwijzer_papier_next:
+      entity_picture: /local/mijnafvalwijzer/papier3.png
+    sensor.afvalwijzer_pmd_next:
+      entity_picture: /local/mijnafvalwijzer/plastic3.png
+    sensor.afvalwijzer_kerstbomen_formatted:
+      entity_picture: /local/mijnafvalwijzer/kerstbomen3.png
+
+    
+
+################################################
+## Inputs
+################################################
+input_boolean:
+  trash_moved:
+    name: Trash has been moved
+    initial: false
+    icon: mdi:delete-empty
+  trash_reminder:
+    name: Trash reminder enabled
+    initial: true
+
+################################################
+## Sensor
+################################################
+sensor:
+  - platform: afvalwijzer                # Required
+    provider: mijnafvalwijzer            # Optional - mijnafvalwijzer (default) or afvalstoffendienstkalender
+    postal_code: !secret zipcode         # Required
+    street_number: !secret housenumber   # Required
+    exclude_pickup_today: false          # Optional. true or false - Default = false
+    default_label: Geen                  # (optional, default = Geen) label if no date found
+
+  - platform: template
+    sensors:
+      afvalwijzer_first_next_date_formatted:
+        value_template: >
+          {%- set tracker_timestamp = as_timestamp(strptime(states('sensor.afvalwijzer_next_date'), "%d-%m-%Y")) %}
+          {%  set months = ["Jan", "Feb", "Mrt", "Apr", "Mei", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"] %}
+          {%- set wdays = ["Zo", "Ma", "Di", "Wo", "Do", "Vr", "Za"] %}
+          {%- set wday =  tracker_timestamp | timestamp_custom('%w') | int %}
+          {%- set month =  tracker_timestamp | timestamp_custom('%m') | int %}
+          {{ tracker_timestamp | timestamp_custom(wdays[wday] + ' ' '%d' ' ' + months[month-1] ) }}
+
+      afvalwijzer_gft_next:
+        friendly_name: GFT
+        value_template: >
+          {{state_attr('sensor.afvalwijzer_gft','days_until_collection_date')}}   
+        attribute_templates:
+          Datum: >-
+            {%- set tracker_timestamp = as_timestamp(strptime(states('sensor.afvalwijzer_gft'), "%d-%m-%Y")) %}
+            {%  set months = ["Jan", "Feb", "Mrt", "Apr", "Mei", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"] %}
+            {%- set wdays = ["Zo", "Ma", "Di", "Wo", "Do", "Vr", "Za"] %}
+            {%- set wday =  tracker_timestamp | timestamp_custom('%w') | int %}
+            {%- set month =  tracker_timestamp | timestamp_custom('%m') | int %}
+            {{ tracker_timestamp | timestamp_custom(wdays[wday] + ' ' '%d' ' ' + months[month-1] ) }}
+          Dag: >
+            {%- set tracker_timestamp = as_timestamp(strptime(states('sensor.afvalwijzer_gft'), "%d-%m-%Y")) %}
+            {%- set wdays = ["Zondag", "Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag"] %}
+            {%- set wday =  tracker_timestamp | timestamp_custom('%w') | int %}
+            {{ tracker_timestamp | timestamp_custom(wdays[wday]) }}
+
+      afvalwijzer_papier_next:
+        friendly_name: Papier
+        value_template: >
+          {{state_attr('sensor.afvalwijzer_papier','days_until_collection_date')}}           
+        attribute_templates:
+          Datum: >-
+            {%- set tracker_timestamp = as_timestamp(strptime(states('sensor.afvalwijzer_papier'), "%d-%m-%Y")) %}
+            {%  set months = ["Jan", "Feb", "Mrt", "Apr", "Mei", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"] %}
+            {%- set wdays = ["Zo", "Ma", "Di", "Wo", "Do", "Vr", "Za"] %}
+            {%- set wday =  tracker_timestamp | timestamp_custom('%w') | int %}
+            {%- set month =  tracker_timestamp | timestamp_custom('%m') | int %}
+            {{ tracker_timestamp | timestamp_custom(wdays[wday] + ' ' '%d' ' ' + months[month-1] ) }}
+          Dag: >
+            {%- set tracker_timestamp = as_timestamp(strptime(states('sensor.afvalwijzer_papier'), "%d-%m-%Y")) %}
+            {%- set wdays = ["Zondag", "Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag"] %}
+            {%- set wday =  tracker_timestamp | timestamp_custom('%w') | int %}
+            {{ tracker_timestamp | timestamp_custom(wdays[wday]) }}
+
+
+      # afvalwijzer_pmd_next:
+      #   friendly_name: Plastic
+      #   value_template: >
+      #     {{state_attr('sensor.afvalwijzer_pmd','days_until_collection_date')}}
+      #   attribute_templates:
+      #     Datum: >-
+      #       {%- set tracker_timestamp = as_timestamp(strptime(states('sensor.afvalwijzer_pmd'), "%d-%m-%Y")) %}
+      #       {%  set months = ["Jan", "Feb", "Mrt", "Apr", "Mei", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"] %}
+      #       {%- set wdays = ["Zo", "Ma", "Di", "Wo", "Do", "Vr", "Za"] %}
+      #       {%- set wday =  tracker_timestamp | timestamp_custom('%w') | int %}
+      #       {%- set month =  tracker_timestamp | timestamp_custom('%m') | int %}
+      #       {{ tracker_timestamp | timestamp_custom(wdays[wday] + ' ' '%d' ' ' + months[month-1] ) }}
+      #     Dag: >
+      #       {%- set tracker_timestamp = as_timestamp(strptime(states('sensor.afvalwijzer_pmd'), "%d-%m-%Y")) %}
+      #       {%- set wdays = ["Zondag", "Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag"] %}
+      #       {%- set wday =  tracker_timestamp | timestamp_custom('%w') | int %}
+      #       {{ tracker_timestamp | timestamp_custom(wdays[wday]) }}   
+
+      afvalwijzer_kerstbomen_formatted:
+        friendly_name: Kerstbomen
+        value_template: >
+          {%- set tracker_timestamp = as_timestamp(strptime(states('sensor.afvalwijzer_kerstbomen'), "%d-%m-%Y")) %}
+          {%  set months = ["Jan", "Feb", "Mrt", "Apr", "Mei", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"] %}
+          {%- set wdays = ["Zo", "Ma", "Di", "Wo", "Do", "Vr", "Za"] %}
+          {%- set wday =  tracker_timestamp | timestamp_custom('%w') | int %}
+          {%- set month =  tracker_timestamp | timestamp_custom('%m') | int %}
+          {{ tracker_timestamp | timestamp_custom(wdays[wday] + ' ' '%d' ' ' + months[month-1] ) }}
+        attribute_templates:
+          Datum: >-
+            {%- set tracker_timestamp = as_timestamp(strptime(states('sensor.afvalwijzer_kerstbomen'), "%d-%m-%Y")) %}
+            {%  set months = ["Jan", "Feb", "Mrt", "Apr", "Mei", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"] %}
+            {%- set wdays = ["Zo", "Ma", "Di", "Wo", "Do", "Vr", "Za"] %}
+            {%- set wday =  tracker_timestamp | timestamp_custom('%w') | int %}
+            {%- set month =  tracker_timestamp | timestamp_custom('%m') | int %}
+            {{ tracker_timestamp | timestamp_custom(wdays[wday] + ' ' '%d' ' ' + months[month-1] ) }}
+          Dag: >
+            {%- set tracker_timestamp = as_timestamp(strptime(states('sensor.afvalwijzer_kerstbomen'), "%d-%m-%Y")) %}
+            {%- set wdays = ["Zondag", "Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag"] %}
+            {%- set wday =  tracker_timestamp | timestamp_custom('%w') | int %}
+            {{ tracker_timestamp | timestamp_custom(wdays[wday]) }} 
+
+      afvalwijzer_next_icon:
+        value_template: >
+          {% set days = states('sensor.afvalwijzer_next_in_days') | int %}
+          {% if days != 'Geen' %}
+            {% if days <= 9 |int %} mdi:numeric-{{days}}-box-multiple-outline
+            {% else %} mdi:numeric-9-plus-box-multiple-outline
+            {% endif%}
+          {% else %} mdi:checkbox-blank-outline
+          {% endif %}
+
+      afvalwijzer_next_color:
+        value_template: >
+          {% set next = states('sensor.afvalwijzer_next_type') %}
+          {% set mapper = {'papier':'#00b2ef',
+                          'gft':'green',
+                          'pmd':'orange',
+                          'restafval':'black',
+                          'kerstbomen, gft':'green',
+                          'kerstbomen':'ff45d7'} %}
+          {% set color = mapper[next] if next in mapper else 'grey' %}
+          {{color}}
+
+      afvalwijzer_color:
+        value_template: >
+          {% set vandaag = states('sensor.afvalwijzer_today') %}
+          {% set mapper = {'papier':'#00b2ef',
+                          'gft':'green',
+                          'pmd':'orange',
+                          'restafval':'black',
+                          'kerstbomen, gft':'green',
+                          'kerstbomen':'#ff45d7'} %}
+          {% set color = mapper[vandaag] if vandaag in mapper else 'grey' %}
+          {{color}}
+
+
+################################################
+## Automation
+################################################
+
+automation:
+  - alias: Reset afvalwijzer notification
+    trigger:
+      platform: state
+      entity_id: input_boolean.trash_moved
+      to: 'on'
+      for:
+        hours: 12
+    action:
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.trash_moved
+      - service: input_boolean.turn_on
+        entity_id: input_boolean.trash_reminder
+
+  - alias: Mark trash as moved from notification
+    trigger:
+    - event_data:
+        action: Buitengezet
+      event_type: mobile_app_notification_action
+      platform: event
+    action:
+      - service: input_boolean.turn_on
+        entity_id: input_boolean.trash_moved
+
+  - alias: Trash has not been moved
+    trigger:
+      platform: time_pattern
+      hours: "/1"
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: input_boolean.trash_moved
+          state: 'off'
+        - condition: state
+          entity_id: input_boolean.trash_reminder
+          state: 'on'
+        - condition: time
+          after: '20:00:00'
+          before: '23:00:00'
+        - condition: template
+          value_template: "{{ states('sensor.afvalwijzer_tomorrow') != 'Geen' }}"
+    action:
+      - service: notify.family
+        data:
+          title: "Afval"
+          message: "Morgen {{ states('sensor.tomorrow_date_full') }}. Wordt afvaltype(n): {{ states('sensor.afvalwijzer_tomorrow') }} opgehaald op !"
+          data:
+            actions:
+            - action: Buitengezet
+              title: Buitengezet

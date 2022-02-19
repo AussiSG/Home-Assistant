@@ -1,0 +1,52 @@
+################################################
+## Template
+################################################
+template:
+  
+# Optional/example
+# A template to ease access to the data as "sensor.pv_outputpower" etc.
+  - sensor:
+    - name:  PV Power output
+      device_class: power
+      state_class: measurement
+      unit_of_measurement: 'W' 
+      state: "{{ state_attr('sensor.inverter_goes', 'pac') | float }}"  
+    - name: Inverter Temperatuur
+      unit_of_measurement: 'C'
+      state: "{{ state_attr('sensor.inverter_goes', 'tempperature') | float  }}"
+    - name: PV energy today 
+      device_class: energy
+      state_class: measurement
+      unit_of_measurement: 'kWh'
+      state: "{{ state_attr('sensor.inverter_goes', 'eday') | float }}"
+      attributes: 
+        last_reset: '1970-01-01T00:00:00+00:00'
+    - name : PV energy total
+      device_class: energy
+      state_class: measurement
+      unit_of_measurement: 'kWh'
+      state: "{{ state_attr('sensor.inverter_goes', 'etotal') | float }}"
+      attributes: 
+        last_reset: '1970-01-01T00:00:00+00:00'
+#    pv_iday:
+#      value_template: '{{ states.sensor.inverter_goes.attributes.iday }}'
+#      unit_of_measurement: '€'
+#      friendly_name: "PV income day"
+#    pv_itotal:
+#  value_template: '{{ states.sensor.inverter_goes.attributes.itotal }}'
+#      unit_of_measurement: '€'
+#      friendly_name: "PV income total"
+
+################################################
+## Utility meter 
+################################################
+utility_meter:
+  pv_emonth:
+    source: sensors.pv_power_output
+    cycle: monthly
+    
+################################################
+## Automation
+################################################
+
+

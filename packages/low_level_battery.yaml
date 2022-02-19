@@ -1,0 +1,31 @@
+################################################
+## Packages / Low level battery check
+################################################
+homeassistant:
+
+
+
+
+################################################
+## Automation
+################################################
+
+automation:
+
+- alias: Low battery level detection & notification for all battery sensors
+  description: ''
+  use_blueprint:
+    path: sbyx/low-battery-level-detection-notification-for-all-battery-sensors.yaml
+    input:
+      threshold: 20
+      time: '16:00:00'
+      day: 0
+      exclude:
+        entity_id:
+        - sensor.mi_a3_battery_level
+        - sensor.sm_a405fn_battery_level
+        device_id:
+      actions:
+      - service: notify.sander
+        data:
+          message: Batterij niveau te laag van {{sensors|replace("_"," ")}}

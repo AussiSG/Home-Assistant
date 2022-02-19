@@ -1,0 +1,171 @@
+################################################
+## Packages / Home security
+################################################
+
+################################################
+## Security panel 
+################################################
+
+alarm_control_panel:
+  - platform: manual
+    name: Home GE Alarm
+    code: !secret alarm_code
+    # Don't require the code to arm the alarm
+    code_arm_required: false
+    # Arm again after triggering
+    disarm_after_trigger: false
+    # Delay from arming and becoming armed, eg. to leave the house.
+    arming_time: 30
+    # Allow time to disarm the alarm before it triggers, eg. when arriving home
+    delay_time: 100
+    # Amount of time the alarm is triggered for
+    trigger_time: 600
+    disarmed:
+      # Ensure the alarm can never be directly triggered when disarmed
+      trigger_time: 0
+    armed_home:
+      # Leave no delay between arming -> armed
+      arming_time: 0
+      # Leave no delay between pending -> triggered
+      delay_time: 0
+
+################################################
+## Inputs
+################################################
+input_boolean:
+  iedereen_afwezig:
+    name: Iedereen afwezig van huis
+
+################################################
+## Inputs
+################################################
+var:
+  detectie:
+    friendly_name: 'Alarm detectie'
+    initial_value: 'Deur'
+
+
+################################################
+## Groups
+################################################
+group:
+  familie_aanwezig_tracker:
+    name: Familie wifi tracker voor aanwezigheid beveiliging
+    entities:
+      - device_tracker.sanders_telefoon
+      - device_tracker.sanders_telefoon5ghz
+      - device_tracker.sandras_telefoon
+      - device_tracker.sandras_telefoon5ghz
+#Set this to true if the group state should only turn on if all grouped entities are on.
+    all: false
+
+
+
+################################################
+## Automation
+################################################
+automation:
+
+
+################################################
+## Switch on home security when away (by wifi)
+################################################
+- alias: Schakel alarm in
+  trigger:
+    platform: state
+    entity_id: group.familie_aanwezig_tracker
+    to: "not_home"
+    for:
+      minutes: 1
+  condition:
+    condition: state
+    entity_id: alarm_control_panel.home_ge_alarm
+    state: disarmed
+  action:
+    service: alarm_control_panel.alarm_arm_away
+    entity_id: alarm_control_panel.home_ge_alarm
+################################################
+
+################################################
+## Send notification when armed
+################################################
+- alias: 'Bericht alarm is geactiveerd in afwezig mode'
+  trigger:
+    - platform: state
+      entity_id: alarm_control_panel.home_ge_alarm
+      to: 'armed_away'
+  action:
+    - service: notify.family
+      data:
+        message: "Alarm is ingeschakeld op {{ states('sensor.date_time') }}"
+################################################
+
+################################################
+## Switch off home security when home (by wifi)
+################################################
+- alias: Schakel alarm uit
+  trigger:
+    platform: state
+    entity_id: group.familie_aanwezig_tracker
+    to: "home"
+  action:
+  - service: alarm_control_panel.alarm_disarm
+    data:
+      entity_id: alarm_control_panel.home_ge_alarm
+      code: !secret alarm_code
+################################################
+
+################################################
+## Send notification when disarmed
+################################################
+- alias: 'Bericht alarm is gedeactiveerd'
+  trigger:
+    - platform: state
+      entity_id: alarm_control_panel.home_ge_alarm
+      to: 'disarmed'
+  action:
+    - service: notify.family
+      data:
+        message: "Alarm is uitgeschakeld op {{ states('sensor.date_time') }}"
+################################################
+        
+################################################
+## Set entity which triggered alarm
+################################################
+- alias: 'Alarm wordt getriggerd tijdens afwezigheid'
+  trigger:
+    - platform: state
+      entity_id: 
+      - binary_sensor.schuifpui_contact
+      - binary_sensor.voordeur_contact
+      to: false
+      attribute: contact
+  condition:
+    - condition: state
+      entity_id: alarm_control_panel.home_ge_alarm
+      state: armed_away
+  action:
+    - service: alarm_control_panel.alarm_trigger
+      entity_id: alarm_control_panel.home_ge_alarm 
+    - service: var.set
+      data:
+        entity_id:
+          - var.detectie
+        value: "{{ trigger.to_state.attributes.friendly_name }}"
+################################################
+
+
+################################################
+## Send notification when alarm is triggered
+################################################
+- alias: 'Stuur bericht wanneer alarm afgaat'
+  trigger:
+    - platform: state
+      entity_id: alarm_control_panel.home_ge_alarm
+      to: "triggered"
+  action:
+    - service: notify.family
+      data:
+        title: "ALARM!"
+        message: "Alarm gaat af door {{ states('var.detectie') }} op {{ states('sensor.date_time') }}"
+################################################

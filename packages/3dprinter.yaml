@@ -1,0 +1,138 @@
+################################################
+## Packages / 3D Printer
+################################################
+homeassistant:
+  customize:
+    sensor.energie_3dprinter_current:
+      friendly_name: Ampere
+      icon: mdi:current-ac
+    sensor.energie_3dprinter_voltage:
+      friendly_name: Voltage
+      icon: mdi:flash-outline
+    sensor.energie_3dprinter_power:
+      friendly_name: Verbruik
+      icon: mdi:eye-outline
+    sensor.energie_3dprinter_daily_energy:
+      friendly_name: Dagelijks verbruik
+      icon: mdi:eye-outline
+################################################
+## Inputs
+################################################
+input_boolean:
+  drie_d_printer_ingeschakeld:
+    name: 3d printer actief
+  drie_d_printer_uitschakelen:
+    name: 3d printer uitschakelen
+
+
+################################################
+## Sensors
+################################################
+sensor:
+- platform: template
+  sensors:
+    drie_d_printer_afgerond:
+      friendly_name: 3dprinter klaar
+      value_template: "{{ states('sensor.energie_3dprinter_power') | float < 20.0 }}"
+
+- platform: template
+  sensors:
+    drie_d_printer_actief:
+      friendly_name: 3dprinter actief
+      value_template: "{{ states('sensor.energie_3dprinter_power') | float >= 30.0 }}"
+
+################################################
+## Automation
+################################################
+
+automation:
+
+################################################
+## 3D printer has started
+################################################
+- alias: '3d printer gestart'
+  trigger:
+    platform: state
+    entity_id: sensor.drie_d_printer_actief
+    from: 'False'
+    to: 'True'
+  action:
+    service: input_boolean.turn_on
+    entity_id: input_boolean.drie_d_printer_ingeschakeld
+##################################################
+
+################################################
+## Switch off 3D printer and sand notification
+################################################
+- alias: Schakel 3d printer uit en reset notify boolean
+  trigger:
+    platform: state
+    entity_id: input_boolean.drie_d_printer_uitschakelen  
+    to: 'on'
+  action:
+    - service: homeassistant.turn_off
+      data:
+        entity_id:
+          - switch.energie_3dprinter_relay
+    - service: input_boolean.turn_off
+      entity_id: input_boolean.drie_d_printer_uitschakelen
+##################################################
+
+################################################
+## Switch off 3D printer from notification
+################################################
+- alias: 3d printer uitgeschakeld vanaf notify
+  trigger:
+  - event_data:
+      action: Uitschakelen
+    event_type: mobile_app_notification_action
+    platform: event
+  action:
+    - service: input_boolean.turn_on
+      entity_id: input_boolean.drie_d_printer_uitschakelen
+################################################
+
+
+################################################
+## 3D printer finished , send notification
+################################################
+- alias: '3d printer klaar + notify'
+  trigger:
+    platform: state
+    entity_id: sensor.drie_d_printer_afgerond
+    from: 'False'
+    to: 'True'
+    for:
+      seconds: 30 
+  condition:
+    condition: and
+    conditions:
+      - condition: state
+        entity_id: input_boolean.drie_d_printer_ingeschakeld
+        state: 'on'
+      - condition: state
+        entity_id: binary_sensor.energie_3dprinter_status
+        state:  'on'
+  action:
+    - service: notify.sander
+      data:
+        title: '3dprinter klaar, uitschakelen?'
+        message: 'Doorlooptijd: {{ ((as_timestamp(now())-as_timestamp(states.input_boolean.drie_d_printer_ingeschakeld.last_changed))/60) | round | int }} minuten.'
+        data:
+          actions:
+          - action: Uitschakelen
+            title: Ja
+          - action: Inschakelen
+            title: Nee
+    - service: input_boolean.turn_off
+      entity_id: input_boolean.drie_d_printer_ingeschakeld
+    - condition: and
+      conditions:
+        - condition: time
+          after: "21:30:00"
+          before: "07:00:00"
+    - service: homeassistant.turn_off
+      data:
+        entity_id:
+          - switch.energie_3dprinter_relay
+################################################

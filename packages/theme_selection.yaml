@@ -1,0 +1,40 @@
+################################################
+## Packages / Theme selection home assistant
+################################################
+homeassistant:
+################################################
+## Inputs
+################################################
+input_number:
+
+################################################
+## Sensor
+################################################
+sensor:
+
+
+################################################
+## Automation
+################################################
+automation:
+
+- alias: Automatic Theme Change 
+  trigger:
+    - platform: homeassistant
+      event: start
+    - platform: state
+      entity_id: sun.sun
+      to: above_horizon
+    - platform: state
+      entity_id: sun.sun
+      to: below_horizon
+  condition: []
+  action:
+    - service: frontend.set_theme
+      data_template:
+        name: >
+          {% if states.sun.sun.state == "above_horizon" %}
+            Github Light Theme
+          {% else %}
+            Github Dark Theme
+          {% endif %}

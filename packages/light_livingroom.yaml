@@ -1,0 +1,140 @@
+
+################################################
+## Packages / Light living room
+################################################
+homeassistant:
+  customize:
+    light.lamp_bank:
+      friendly_name: Lamp Bank
+    light.lamp_tv:
+      friendly_name: Lamp TV  
+    switch.momentary_toggle_lights:
+      friendly_name: Alle lampen schakelen
+      icon: mdi:lightbulb-group-outline
+
+################################################
+## Momentary switch
+################################################
+switch:
+  - platform: momentary
+    name: toggle lights
+    mode: on
+    toggle_for: 5
+    cancellable: True
+  
+################################################
+## Light group
+################################################    
+light:
+  - platform: group
+    name: Woonkamer lampen
+    entities:
+      - light.lamp_bank
+      - light.lamp_tv
+
+################################################
+## Automation
+################################################
+
+automation:    
+###### Schakel verlichting woonkamer ######
+- alias: "Schakel verlichting woonkamer in "
+  trigger:
+    # Tuin licht sensor
+    - platform: numeric_state
+      entity_id: sensor.achtertuin_lux
+      below: 15
+  condition:
+    condition: and
+    conditions:
+    - condition: time
+      before: "22:00:00"
+      after:  "15:00:00"
+    - condition: state
+      entity_id: input_boolean.vakantie
+      state: "off"
+  action:
+    - service: light.turn_on
+      data:
+        entity_id:
+          - light.woonkamer_lampen
+        brightness_pct: 75
+    - service: input_boolean.turn_on
+      entity_id: input_boolean.lampen_ingeschakeld
+##############################################
+
+
+##############################################
+# Living room lights to 75% via aqara switch
+##############################################
+- alias: Lampen woonkamer 75% via aqara drukknop
+  trigger:
+  - platform: state
+    entity_id: sensor.woonkamerschakelaar_click
+    to: single
+  - platform: state
+    entity_id: switch.momentary_toggle_lights
+    to: "on"
+  condition:
+    condition: and
+    conditions:
+      - condition: time
+        after: "16:00:00"
+        before: "11:00:00"
+      - condition: numeric_state
+        entity_id: sensor.achtertuin_lux
+        below: 10         
+      - condition: state
+        entity_id: light.woonkamer_lampen
+        state: "off"   
+      - condition: state
+        entity_id: input_boolean.vakantie
+        state: "off"       
+  action:
+    - service: light.turn_on
+      data:
+        entity_id:
+          - light.woonkamer_lampen
+        brightness_pct: 75
+    - service: input_boolean.turn_on
+      entity_id: input_boolean.lampen_ingeschakeld
+##############################################        
+    
+##############################################
+# Switch off living room lights
+##############################################
+- alias: Schakel woonkamer lampen uit
+  trigger:
+  # Smart swicht on 1e floor  
+  - entity_id: sensor.woonkamerschakelaar_click
+    platform: state
+    to: double
+  # Toggle switch on tablet
+  - platform: state
+    entity_id: switch.momentary_toggle_lights
+    to: "on" 
+  # Zonsopkomst 
+  - platform: numeric_state
+    entity_id: sun.sun
+    value_template: "{{ state_attr('sun.sun', 'elevation') }}"
+    above: 8 
+  # Tuin licht sensor  
+  - platform: numeric_state
+    entity_id: sensor.achtertuin_lux
+    above: 30 
+  condition:
+    condition: and
+    conditions:
+    - condition: state
+      entity_id: light.woonkamer_lampen
+      state: "on"  
+    - condition: state
+      entity_id: input_boolean.vakantie
+      state: "off"  
+  action:
+    - service: light.turn_off
+      data:
+        entity_id:
+          - light.woonkamer_lampen
+    - service: input_boolean.turn_off
+      entity_id: input_boolean.lampen_ingeschakeld

@@ -1,0 +1,115 @@
+substitutions:
+  device_name: energie_3dprinter
+  # Higher value gives lower watt readout
+  current_res: '0.00290'
+  # Lower value gives lower voltage readout
+  voltage_div: '755'
+
+esphome:
+  name: ${device_name}
+  platform: ESP8266
+  board: esp8285
+  esp8266_restore_from_flash: true
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+  power_save_mode: none
+
+ 
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret wifi_pass
+
+ota:
+  password: !secret wifi_pass
+
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+web_server:
+  port: 80
+
+binary_sensor:
+  - platform: gpio
+    id: button
+    internal: true
+    pin:
+      number: GPIO13
+    on_press:
+      - switch.toggle: relay
+  - platform: status
+    name: "${device_name} Status"    
+
+output:
+  - platform: gpio
+    pin: GPIO00
+    inverted: true
+    id: led
+
+switch:
+  - platform: gpio
+    restore_mode: RESTORE_DEFAULT_OFF
+    pin: GPIO15
+    id: relay
+    name: '${device_name} Relay'
+    on_turn_on:
+      - output.turn_on: led
+    on_turn_off:
+      - output.turn_off: led
+
+status_led:
+  pin:
+    number: GPIO02
+    inverted: true
+
+sensor:
+  - platform: uptime
+    name: '${device_name} Uptime'
+    unit_of_measurement: days
+    update_interval: 300s
+    filters:
+      - multiply: 0.000011574
+
+  - platform: wifi_signal
+    name: '${device_name} WiFi Signal'
+    update_interval: 300s
+
+  - platform: hlw8012
+    sel_pin:
+      number: GPIO12
+      inverted: true
+    cf_pin: GPIO05
+    cf1_pin: GPIO04
+    current_resistor: ${current_res}
+    voltage_divider: ${voltage_div}
+    current:
+      name: '${device_name} Current'
+      unit_of_measurement: 'A'
+      accuracy_decimals: 3
+     
+    voltage:
+      name: '${device_name} Voltage'
+      unit_of_measurement: 'V'
+
+    power:
+      name: '${device_name} Power'
+      unit_of_measurement: 'W'
+      id: '${device_name}_Power'
+
+    change_mode_every: 4
+    update_interval: 10s
+  - platform: total_daily_energy
+    name: '${device_name} Daily Energy' 
+    power_id: '${device_name}_Power'
+    filters:
+        # Multiplication factor from W to kW is 0.001
+        - multiply: 0.001
+    unit_of_measurement: kWh

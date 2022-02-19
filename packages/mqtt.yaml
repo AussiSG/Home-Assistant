@@ -1,0 +1,21 @@
+################################################
+## Packages / Zigbee MQTT
+################################################
+
+homeassistant:
+
+
+mqtt:
+  discovery: true
+  broker: !secret mqtt_broker  # Remove if you want to use builtin-in MQTT broker
+  # birth_message and will_message is not required anymore for Home Assistant 0.113 >=
+  birth_message:
+    topic: 'hass/status'
+    payload: 'online'
+  will_message:
+    topic: 'hass/status'
+    payload: 'offline'
+
+
+
+  

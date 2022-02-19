@@ -1,0 +1,18 @@
+################################################
+## Packages / Uptime HA
+################################################
+homeassistant:
+
+################################################
+## Sensors
+################################################
+sensor:
+- platform: uptime
+  name: 'HA uptime moment'
+
+- platform: template
+  sensors:
+    ha_uptime_min:
+      friendly_name: 'HA uptime minutes'
+      value_template: >
+        {{ (as_timestamp(now()) - as_timestamp(states('sensor.ha_uptime_moment'))) / 60.0 }}

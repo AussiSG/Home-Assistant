@@ -1,0 +1,24 @@
+################################################
+## Packages / Notify
+################################################
+homeassistant:
+
+
+################################################
+## Notify
+################################################
+notify:
+  - platform: group
+    name: family
+    services:
+      - service: mobile_app_mi_a3
+      - service: mobile_app_sm_a405fn
+  - platform: group
+    name: Sander
+    services:
+      - service: mobile_app_mi_a3
+  - platform: group
+    name: Sandra
+    services:
+      - service: mobile_app_sm_a405fn
+

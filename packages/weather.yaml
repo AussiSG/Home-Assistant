@@ -1,0 +1,94 @@
+################################################
+## Packages / Weather
+################################################
+homeassistant:
+
+
+
+################################################
+## Inputs
+################################################
+input_boolean:
+  temperatuursverandering:
+    name: Temperatuursverandering trigger
+
+
+################################################
+## Sensor
+################################################
+sensor:
+  - platform: command_line
+    command: python3 -c "import requests; import json; import random; dataRequest = requests.get('https://cdn-secure.buienalarm.nl/api/3.4/forecast.php?lat=52.121&lon=5.090&region=nl&unit=mm%2Fu&c='+str(random.randint(0,999999999999999)) ).text; dataRequest = dataRequest.replace('\r\n',' '); data = '{\"data\":'+dataRequest+'}';    print(data);"
+    name: Neerslag_Buienalarm_Regen_Data
+    json_attributes:
+      - data
+    value_template: 'last_changed: {{states.sensor.neerslag_buienalarm_regen_data.last_changed | default(now())}}'
+    scan_interval: 240
+
+################################################
+## Binary sensor
+################################################
+
+# #binary_sensor:
+#   - platform: template
+#     sensors:
+#       weather_state:
+#         value_template: >-
+#           {{ is_state("input_boolean.temperatuursverandering", "on") }}
+#         icon_template: >-
+#           {% if is_state('weather.overvecht', 'clear-night') %}
+#             mdi:weather-night
+#           {% elif is_state('weather.overvecht', 'cloudy') %}
+#             mdi:weather-cloudy
+#           {% elif is_state('weather.overvecht', 'fog') %}
+#             mdi:weather-fog  
+#           {% elif is_state('weather.overvecht', 'hail') %}
+#             mdi:weather-hail  
+#           {% elif is_state('weather.overvecht', 'lightning') %}
+#             mdi:weather-lightning     
+#           {% elif is_state('weather.overvecht', 'lightning-rainy') %}
+#             mdi:weather-lightning-rainy     
+#           {% elif is_state('weather.overvecht', 'partlycloudy') %}
+#             mdi:weather-partly-cloudy    
+#           {% elif is_state('weather.overvecht', 'pouring') %}
+#             mdi:weather-pouring   
+#           {% elif is_state('weather.overvecht', 'rainy') %}
+#             mdi:weather-rainy     
+#           {% elif is_state('weather.overvecht', 'snowy') %}
+#             mdi:weather-snowy    
+#           {% elif is_state('weather.overvecht', 'snowy-rainy') %}
+#             mdi:weather-snowy-rainy    
+#           {% elif is_state('weather.overvecht', 'sunny') %}
+#             mdi:weather-sunny  
+#           {% elif is_state('weather.overvecht', 'windy') %}
+#             mdi:weather-windy                
+#           {% elif is_state('weather.overvecht', 'windy-variant') %}
+#             mdi:weather-windy-variant     
+#           {% else %}
+#             mdi:weather-cloudy-alert                                      
+#           {% endif %}
+#         attribute_templates:
+#           Temperatuur: >
+#             {{ state_attr('weather.overvecht', 'temperature') }}
+
+
+################################################
+## Automation
+################################################
+
+automation:
+# ###### Bericht alarm geactiveerd tijdens afwezigheid, deurcontact ######
+# - alias: Schakel wanneer status verandert van weer overvecht 
+#   trigger:
+#     platform: state
+#     entity_id: weather.overvecht
+#     attribute: temperature
+#   condition:
+#     condition: template
+#     value_template: '{{ trigger.to_state.state != trigger.from_state.state }}'
+#   action:
+#     - service: input_boolean.turn_on
+#       entity_id: input_boolean.temperatuursverandering
+#     - delay: '00:00:30'
+#     - service: input_boolean.turn_off
+#       entity_id: input_boolean.temperatuursverandering

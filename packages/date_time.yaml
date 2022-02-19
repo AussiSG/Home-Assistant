@@ -1,0 +1,68 @@
+################################################
+## Packages / Date & time
+################################################
+homeassistant:
+
+
+################################################
+## Binary Senors
+################################################
+binary_sensor:
+- platform: workday
+  country: NL
+  workdays: [mon, tue, wed, thu, fri ]
+  excludes: [sat, sun, holiday]
+  add_holidays:
+    # - '2018-12-26'
+    # - '2018-12-31'
+
+################################################
+## Senors
+################################################
+sensor:
+- platform: time_date
+  display_options:
+    - 'time'
+    - 'date'
+    - 'date_time'
+    - 'date_time_utc'
+    - 'date_time_iso'
+    - 'time_date'
+    - 'time_utc'
+    - 'beat'
+
+- platform: season
+
+- platform: template
+  sensors:
+    today_date_full: 
+      friendly_name: 'Datum vandaag voluit'
+      value_template: >
+        {% set x = states('sensor.date') %}
+        {% set months = ["Januari", "Februari", "Maart", "April", "Mei", "Juni", "Juli", "Augustus", "September", "Oktober", "November", "December"] %}
+        {% set days = ["Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag", "Zondag"]  %}
+        {{ days[now().weekday()] + ' ' + now().day | string + ' ' + months[now().month-1] }} 
+
+    tomorrow_date_full: 
+      friendly_name: 'Datum morgen voluit'
+      value_template: >
+        {% set tomorrow = now() + timedelta(days=1) %}
+        {% set months = ["Januari", "Februari", "Maart", "April", "Mei", "Juni", "Juli", "Augustus", "September", "Oktober", "November", "December"] %}
+        {% set days = ["Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag", "Zondag"]  %}
+        {{ days[tomorrow.weekday()] + ' ' + (tomorrow.day) | string + ' ' + months[tomorrow.month-1] }} 
+
+    today_month_short:
+      friendly_name: "Datum vandaag maand kort"      
+      value_template: >
+        {% set x = states('sensor.date') %}
+        {% set months = ["Jan", "Feb", "Mrt", "Apr", "Mei", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"] %}
+        {% set days = ["Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag", "Zondag"]  %}
+        {{ days[now().weekday()] + ' ' + now().day | string + ' ' + months[now().month-1] }} 
+
+    today_month_day_short:
+      friendly_name: "Datum vandaag maand & dag kort"      
+      value_template: >
+        {% set x = states('sensor.date') %}
+        {% set months = ["Jan", "Feb", "Mrt", "Apr", "Mei", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"] %}
+        {% set days = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"]  %}
+        {{ days[now().weekday()] + ' ' + now().day | string + ' ' + months[now().month-1] }} 

@@ -1,0 +1,80 @@
+substitutions:
+  display_name: Achtertuin
+
+esphome:
+  name: solar_weather
+  platform: ESP8266
+#  board: d1_mini_pro
+  board: d1_mini
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+
+
+#api:
+
+# Enable logging
+logger:
+
+mqtt:
+  broker: !secret mqtt_broker
+  username: !secret mqtt_user
+  password: !secret mqtt_pass
+  birth_message:
+  will_message:
+
+ota:
+  password: !secret wifi_pass
+
+i2c:
+ - id: ic_1
+   sda: 4
+   scl: 5
+   scan: true
+   
+dallas:
+  - pin: GPIO13
+
+sensor:
+  - platform: dallas
+    address: 0x540215726CAEFF28
+    name: ${display_name} Temperatuur
+    
+  - platform: bme280
+    temperature:
+      name: ${display_name} Interne Temperatuur
+      oversampling: 4x
+    pressure:
+      name: ${display_name} Luchtdruk
+      oversampling: 4x
+    humidity:
+      name: ${display_name} Luchtvochtigheid
+      oversampling: 4x
+    address: 0x76
+    update_interval: 30s
+
+  - platform: bh1750
+    name: ${display_name} Lux
+    address: 0x23
+    update_interval: 25s
+
+  - platform: adc
+    pin: A0
+    id: "VCC"
+    name: ${display_name} Batterij
+    update_interval: 35s
+    filters:
+      - multiply: 5.265822784810127
+      
+  - platform: template
+    name: ${display_name} Batterij Level
+    unit_of_measurement: '%'
+    device_class: battery
+    update_interval: 25s
+    lambda: |-
+      return ((id(VCC).state -3) /1.2 * 100.00);
+
+deep_sleep:
+  run_duration: 40s
+  sleep_duration: 4min

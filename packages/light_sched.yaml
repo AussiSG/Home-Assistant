@@ -1,0 +1,53 @@
+################################################
+## Packages / light sched
+################################################
+homeassistant:
+  customize:
+    switch.wcd_schuurlicht:
+      icon: mdi:lightbulb-on
+
+
+
+################################################
+## Automation
+################################################
+
+automation:    
+###### Schakel lichtslang schuur aan ######
+- alias: 'Schakel lichtslang aan bij schemer'
+  trigger:
+  - platform: numeric_state
+    entity_id: sensor.achtertuin_lux
+    below: 1
+  condition:
+    condition: and
+    conditions:
+      - condition: numeric_state
+        entity_id: sensor.ha_uptime_min
+        above: 5.0 
+      - condition: time
+        after: "15:00:00"
+        before: "22:00:00"        
+  action:
+    - service: switch.turn_on
+      data:
+        entity_id:
+          - switch.wcd_schuurverlichting
+##############################################
+
+###### Schakel lichtslang schuur uit ######
+- alias: "Schakel lichtslang uit"
+  trigger:  
+    - platform: time
+      at: '03:00:00'     
+    - platform: state
+      entity_id: switch.momentary_toggle_lights
+      to: "on" 
+  action:
+    - service: switch.turn_off
+      data:
+        entity_id:
+          - switch.wcd_schuurverlichting
+##############################################
+
+

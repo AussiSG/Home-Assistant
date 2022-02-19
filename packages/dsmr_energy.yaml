@@ -1,0 +1,61 @@
+################################################
+## Packages / DSMR 
+################################################
+homeassistant:
+  customize:
+    sensor.daily_energy_offpeak:
+      friendly_name: "Dagelijks energievebruik tarief 1"
+      unit: "kWh"
+    sensor.daily_energy_peak:
+      friendly_name: "Dagelijks energievebruik tarief 2"
+      unit: "kWh"
+    sensor.monthly_energy_offpeak:
+      friendly_name: "Dagelijks energievebruik tarief 1"
+      unit: "kWh"
+    sensor.monthly_energy_peak:
+      friendly_name: "Dagelijks energievebruik tarief 2"
+      unit: "kWh"
+    sensor.daily_gas:
+      friendly_name: "Dagelijks Gasverbruik"
+      unit: "m3"
+    sensor.monthly_gas:
+      friendly_name: "Maandelijks Gasverbruik"
+      unit: "m3"
+################################################
+## Utility meter 
+################################################
+utility_meter:
+  daily_energy_offpeak:
+    source: sensor.energy_consumption_tarif_1
+    cycle: daily
+  daily_energy_peak:
+    source: sensor.energy_consumption_tarif_2
+    cycle: daily
+  daily_gas:
+    source: sensor.hourly_gas_consumption
+    cycle: daily
+  monthly_energy_offpeak:
+    source: sensor.energy_consumption_tarif_1
+    cycle: monthly
+  monthly_energy_peak:
+    source: sensor.energy_consumption_tarif_2
+    cycle: monthly
+  monthly_gas:
+    source: sensor.gas_consumption
+    cycle: monthly
+
+################################################
+## Sensor
+################################################
+sensor:
+
+- platform: template
+  sensors:
+    daily_energy:
+      friendly_name: "Dagelijks Energieverbruik"
+      unit_of_measurement: kWh
+      value_template: "{{ ( states('sensor.daily_energy_offpeak')|float + states('sensor.daily_energy_peak')| float ) | round(2) }}"
+    monthly_energy:
+      friendly_name: "Maandelijk Energieverbruik"
+      unit_of_measurement: kWh
+      value_template: "{{ ( states('sensor.monthly_energy_offpeak')|float + states('sensor.monthly_energy_peak')|float ) | round(2) }}"

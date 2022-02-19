@@ -1,0 +1,54 @@
+################################################
+## Packages / RFLink
+################################################
+homeassistant:
+  customize:
+    light.wcd_bank:
+      assumed_state: false
+
+################################################
+## Rflink
+################################################
+rflink:
+  port: /dev/ttyACM0
+
+################################################
+## Sensor
+################################################
+sensor:
+
+################################################
+## Light
+################################################
+light:
+ - platform: rflink
+   device_defaults:
+    signal_repetitions: 4
+   automatic_add: false
+   devices:
+    tristate_8658aa_1:
+        fire_event: true
+        name: WCD Bank
+    tristate_865a2a_1:
+        fire_event: true
+        name: WCD Tv
+    newkaku_00d73400_2:
+        fire_event: true
+        name: TV+Audio+PS4
+        type: switchable
+    newkaku_00d73400_4:
+        fire_event: true
+        name: WCD Kerstverlichting 3
+        type: switchable
+    eurodomest_0d509e_1:
+        fire_event: true      
+        name: WCD Kerstverlichting 4
+    newkaku_00d73400_5:
+        fire_event: true
+        name: Mechanische ventilatie
+        type: hybrid
+################################################
+## Automation
+################################################
+
+

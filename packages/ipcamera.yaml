@@ -1,0 +1,162 @@
+################################################
+## Packages / IP camera's
+################################################
+
+
+################################################
+## Input boolean
+################################################
+input_boolean:
+  camera1_motion_detected:
+    name: Camera1 - Motion detected
+    icon: mdi:eye
+  camera1_motion_detection:
+      name: Motion detection
+      icon: mdi:eye
+  camera1_notify:
+    name: Camera1 Notify
+
+################################################
+## Input boolean
+################################################
+input_text:
+  timestamp:
+    name: Timestamp during start automation
+
+
+################################################
+## Binary sensor
+################################################          
+binary_sensor:
+  - platform: template
+    sensors:
+      camera1_motion:
+        friendly_name: "Camera - Movement"
+        device_class: motion
+        value_template: "{{ is_state('input_boolean.camera1_motion_detected', 'on') }}"
+        
+################################################
+## rest command
+################################################  
+rest_command:
+  camera1_motion_start:
+    url: !secret url_camera1_motion_start
+  camera1_motion_pause:
+    url: !secret url_camera1_motion_pause
+
+################################################
+## Automation
+################################################
+
+automation:
+################################################
+## Motion detected on camera straatkant
+################################################
+- alias: "Motioneye - Camera1 - Motion started"
+  description: ''
+  mode: queued
+  max: 3
+  trigger:
+  - platform: webhook
+    webhook_id: motioneye-camera1-started
+  condition: []
+  action:
+    - choose:
+      - conditions:
+          condition: and
+          conditions:
+          - condition: state
+            entity_id: input_boolean.camera1_notify
+            state: "on"
+          - condition: time
+            before: "23:00:00"
+            after:  "07:00:00"
+        sequence:
+          - service: input_boolean.turn_on
+            entity_id: input_boolean.camera1_motion_detected
+          - service: automation.trigger
+            entity_id: automation.notify_me_if_there_is_movement_in_my_camera1
+      - conditions:
+        - condition: state
+          entity_id: input_boolean.camera1_notify
+          state: "off"
+        sequence:
+          - service: input_boolean.turn_on
+            entity_id: input_boolean.camera1_motion_detected  
+#######################################################            
+
+################################################
+## Motion detection endend on camera straatkant
+################################################
+- alias: "Motioneye - Camera1 - Motion ended"
+  trigger:
+    platform: webhook
+    webhook_id: motioneye-camera1-ended
+  action:
+    service: input_boolean.turn_off
+    data:
+      entity_id: input_boolean.camera1_motion_detected
+###############################################
+
+################################################
+## Enable motion detection on camera straatkant
+################################################
+- alias: "Enable motion detection"
+  trigger:
+    - platform: state
+      entity_id: input_boolean.camera1_motion_detection
+      to: 'on'
+  action:
+    service: rest_command.camera1_motion_start
+################################################ 
+    
+################################################
+## Disable motion detection on camera straatkant
+################################################ 
+- alias: "Disable motion detection"
+  trigger:
+    - platform: state
+      entity_id: input_boolean.camera1_motion_detection
+      to: 'off'
+  action:
+    service: rest_command.camera1_motion_pause
+################################################
+  
+################################################
+## Notify when motion is detected on camera straatkant
+################################################ 
+- alias: Notify me if there is movement in my camera1
+  description: ''
+  trigger: []
+  condition: []
+  action:
+  - service: input_text.set_value
+    entity_id: input_text.timestamp
+    data_template:
+      value: '{{ now().strftime(''%Y%m%d_%H%M%S'') }}' 
+  - service: camera.snapshot
+    target:
+      entity_id: camera.straatkant            
+    data:
+      filename: /config/www/snapshots/straatkant/straatkant_{{ states("input_text.timestamp") }}.jpg
+  - delay: 00:00:05    
+  - service: notify.sander
+    data:
+      message: Beweging straatkant
+      data:
+        image: !secret ip_camera_image
+####################################################
+
+################################################
+## Delete old snapshots after a month
+################################################ 
+- alias: Delete files after a month
+  trigger:
+    platform: time
+    at: "01:00:00"
+  action:
+    service: delete.files_in_folder
+    data:
+      folder: '/config/www/snapshots/straatkant'
+      time: 94672800
+#################################################

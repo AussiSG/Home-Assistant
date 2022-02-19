@@ -1,0 +1,93 @@
+# Configure a default setup of Home Assistant (frontend, api, etc)
+default_config:
+
+homeassistant:
+  packages:   !include_dir_named packages
+  allowlist_external_dirs:
+    - /share
+        
+  auth_providers:
+      - type: trusted_networks
+        trusted_networks:
+          - 192.168.0.0/24
+      - type: homeassistant      
+
+#customizer:
+#  custom_ui: local
+
+delete:
+            
+# Uncomment this if you are using SSL/TLS, running in Docker container, etc.
+http:
+  #ssl_certificate: /ssl/fullchain.pem
+  #ssl_key: /ssl/privkey.pem
+  ip_ban_enabled: false
+  login_attempts_threshold: 10
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 127.0.0.1
+    - 172.30.32.0/24
+    - 172.30.33.0/24
+
+# Text to speech
+tts:
+  - platform: google_translate
+    cache: true
+    cache_dir: /tmp/tts
+    time_memory: 300
+    base_url: !secret duckdns_domain
+
+timer:
+  terrarium:
+    duration: '00:00:30'
+
+group:          !include groups.yaml
+script:         !include_dir_merge_list Scripts/
+sensor:         !include sensors.yaml
+media_player:   !include mediaplayers.yaml
+automation:     !include_dir_merge_list Automation/
+
+
+
+frontend:
+  themes: !include_dir_merge_named themes
+  extra_module_url:
+    /hacsfiles/lovelace-card-mod/card-mod.js
+
+    # Example configuration.yaml entry
+
+ ################################### LOVELACE UI ###################################
+#lovelace:
+  #mode: yaml
+    
+influxdb:
+  host: a0d7b954-influxdb
+  port: 8086
+  database: homeassistant
+  username: !secret influx_user
+  password: !secret influx_pass
+  max_retries: 6
+  tags_attributes:
+    - friendly_name
+    - hidden
+  exclude:
+    domains:
+      - automation
+      - group
+      
+ffmpeg:
+  ffmpeg_bin: /usr/bin/ffmpeg
+
+logger:
+  default: error
+  logs:
+    #device_tracker: debug
+    #homeassistant.components.http.view: debug
+    #homeassistant.components.webhook: debug
+    #homeassistant.components.automation: debug 
+    #homeassistant.core: debug
+    #aioesphomeapi: debug
+    rflink: debug
+    #dsmr_parser: debug
+    #homeassistant.components.dsmr: debug
+    #custom_component.dsmr_parser: debug

@@ -1,0 +1,151 @@
+substitutions:
+  device_name: terrarium_uv_lamp
+  # Higher value gives lower watt readout
+  current_res: '0.00290'
+  # Lower value gives lower voltage readout
+  voltage_div: '755'
+
+esphome:
+  name: ${device_name}
+  platform: ESP8266
+  board: esp8285
+  esp8266_restore_from_flash: true
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+  power_save_mode: none
+
+captive_portal:
+
+# Enable logging
+logger:
+  level: VERY_VERBOSE 
+
+# Enable Home Assistant API
+api:
+  password: !secret wifi_pass
+ota:
+  password: !secret wifi_pass
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+web_server:
+  port: 80
+
+binary_sensor:
+  - platform: gpio
+    id: button
+    internal: true
+    pin:
+      number: GPIO13
+    on_press:
+      - switch.toggle: relay
+  - platform: status
+    name: "${device_name} Status"      
+
+output:
+  - platform: gpio
+    pin: GPIO00
+    inverted: true
+    id: led
+
+switch:
+  - platform: gpio
+    pin: GPIO15
+    restore_mode: RESTORE_DEFAULT_OFF
+    id: relay
+    name: '${device_name}_relay'
+    on_turn_on:
+      - output.turn_on: led
+    on_turn_off:
+      - output.turn_off: led
+
+status_led:
+  pin:
+    number: GPIO02
+    inverted: true
+
+
+text_sensor:
+  - platform: template
+    name: ${device_name} Uptime
+    id: ${device_name}_uptime
+    icon: mdi:clock-start
+
+sensor:
+#  - platform: uptime
+#    name: '${device_name} Uptime'
+#    unit_of_measurement: days
+#    update_interval: 300s
+#    filters:
+#      - multiply: 0.000011574
+
+
+  - platform: uptime
+    name: "${device_name} Uptime Sensor"
+    id: ${device_name}_uptime_raw
+    update_interval: 60s
+    on_raw_value:
+      then:
+        - logger.log:
+            format: "Raw Value of Uptime sensor: %f"
+            args: ['id(${device_name}_uptime_raw).raw_state']
+            level: INFO
+        - text_sensor.template.publish:
+            id: ${device_name}_uptime
+            state: !lambda |-
+              int seconds = round(id(${device_name}_uptime_raw).raw_state);
+              int days = seconds / (24 * 3600);
+              seconds = seconds % (24 * 3600);
+              int hours = seconds / 3600;
+              seconds = seconds % 3600;
+              int minutes = seconds /  60;
+              seconds = seconds % 60;
+              if ( days ) {
+                return { (String(days) +"d " + String(hours) +"h " + String(minutes) +"m "+ String(seconds) +"s").c_str() };
+              } else if ( hours ) {
+                return { (String(hours) +"h " + String(minutes) +"m "+ String(seconds) +"s").c_str() };
+              } else if ( minutes ) {
+                return { (String(minutes) +"m "+ String(seconds) +"s").c_str() };
+              } else {
+                return { (String(seconds) +"s").c_str() };
+              }
+      
+  - platform: wifi_signal
+    name: '${device_name} WiFi Signal'
+    update_interval: 300s
+
+  - platform: hlw8012
+    sel_pin:
+      number: GPIO12
+      inverted: true
+    cf_pin: GPIO05
+    cf1_pin: GPIO04
+    current_resistor: ${current_res}
+    voltage_divider: ${voltage_div}
+    current:
+      name: '${device_name} Current'
+      unit_of_measurement: 'A'
+      accuracy_decimals: 3
+   
+    voltage:
+      name: '${device_name} Voltage'
+      unit_of_measurement: 'V'
+
+    power:
+      name: '${device_name} Power'
+      unit_of_measurement: 'W'
+      id: '${device_name}_Power'
+
+    change_mode_every: 4
+    update_interval: 10s
+#  - platform: total_daily_energy
+#    name: '${device_name} Daily Energy' 
+#    power_id: '${device_name}_Power'
+#    filters:
+#        # Multiplication factor from W to kW is 0.001
+#        - multiply: 0.001
+#    unit_of_measurement: kWh

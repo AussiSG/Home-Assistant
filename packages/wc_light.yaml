@@ -1,0 +1,152 @@
+################################################
+## Packages / WC Light
+################################################
+homeassistant:
+
+
+################################################
+## Inputs
+################################################
+input_boolean:
+  wc_deur_geopend:
+    name: WC deur geopend
+  wc_deur_gesloten:
+    name: WC deur sloten
+  wc_beweging_actief:
+    name: Beweging op WC
+  
+
+################################################
+## Timer
+################################################
+timer:
+  delay_door_check:
+    duration: "00:00:10"
+  max_time_wc_light_on:
+    duration: "00:15:00"
+    
+
+
+################################################
+## Script
+################################################
+
+script: 
+  wc_lamp_uit:
+    sequence:
+      # This is written using the Script Syntax
+      - wait_template: '{{ is_state(''binary_sensor.wc_pir_occupancy'', ''off'') }}'
+      - service: switch.turn_off
+        entity_id: switch.wc_schakelaar
+      - service: timer.cancel
+        entity_id: timer.max_time_wc_light_on      
+  
+
+################################################
+## Automation
+################################################
+automation: 
+
+
+################################################
+## Schakel de WC verlichting in
+################################################
+- alias: 'Schakel verlichting in op WC'
+  trigger:
+    platform: state
+    entity_id: binary_sensor.wc_pir_occupancy
+    from: 'off'
+    to: 'on'
+  condition:
+    condition: and
+    conditions: 
+      - condition: state
+        entity_id: binary_sensor.wc_deur_contact
+        # 'on' state means door is openend
+        state: 'on'
+      - condition: state
+        entity_id: switch.wc_schakelaar
+        state: "off"
+  action:
+    - service: timer.start
+      entity_id: timer.delay_door_check
+    - service: timer.start
+      entity_id: timer.max_time_wc_light_on
+    - service: switch.turn_on
+      entity_id: switch.wc_schakelaar
+
+################################################
+## Schakel de WC verlichting uit
+################################################
+- alias: 'Schakel verlichting uit op WC'
+  trigger:
+    platform: state
+    entity_id: binary_sensor.wc_deur_contact
+    # 'on' state means door is openend
+    # 'off' state means door is closed
+    from: 'on'
+    to: 'off'
+  condition:
+    condition: and
+    conditions: 
+    - condition: state
+      entity_id: switch.wc_schakelaar
+      state: "on"    
+    - condition: state
+      entity_id: timer.delay_door_check
+      state: 'idle'
+  action:
+    - service: script.wc_lamp_uit
+
+
+################################################
+## Annuleer maximale timer bij beweging
+################################################
+- alias: 'Annuleer timer bij beweging in wc'
+  trigger:
+    platform: state
+    entity_id: binary_sensor.wc_pir_occupancy
+    from: 'off'
+    to: 'on'
+  condition:
+    - condition: state
+      entity_id: switch.wc_schakelaar
+      state: 'on'
+  action:
+    - service: timer.cancel
+      entity_id: timer.max_time_wc_light_on
+
+
+################################################
+## Start timer weer bij einde beweging op wc
+################################################
+- alias: 'Start timer weer bij einde beweging in wc'
+  trigger:
+    platform: state
+    entity_id: binary_sensor.wc_pir_occupancy
+    from: 'on'
+    to: 'off'
+  condition:
+    - condition: state
+      entity_id: switch.wc_schakelaar
+      state: 'on'
+  action:
+    - service: timer.start
+      entity_id: timer.max_time_wc_light_on
+
+
+################################################
+## Schakel de WC verlichting uit door maximale timer
+################################################
+- alias: 'Schakel verlichting uit op WC maximale tijd'
+  trigger:
+    - platform: event
+      event_type: timer.finished
+      event_data:
+        entity_id: timer.max_time_wc_light_on  
+  condition:
+    - condition: state
+      entity_id: switch.wc_schakelaar
+      state: 'on'
+  action:
+    - service: script.wc_lamp_uit

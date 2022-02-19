@@ -1,0 +1,344 @@
+################################################
+## Packages / Terrarium
+################################################
+homeassistant:
+  customize:
+    switch.terrarium_watersproeier:
+      friendly_name:  Watersproeier
+      icon: 'mdi:water'
+
+    switch.terrarium_uv_lamp_relay:
+      friendly_name: UV Lamp
+      icon: mdi:lightbulb
+    sensor.terrarium_uv_lamp_current:
+      friendly_name: Ampere
+      icon: mdi:current-ac
+    sensor.terrarium_uv_lamp_voltage:
+      friendly_name: Voltage
+      icon: mdi:flash-outline
+    sensor.terrarium_uv_lamp_power:
+      friendly_name: Verbruik
+      icon: mdi:eye-outline
+    sensor.terrarium_uv_lamp_daily_energy:
+      friendly_name: Dagelijks verbruik
+      icon: mdi:eye-outline
+    
+    switch.terrarium_warmtelamp_relay:
+      friendly_name: Warmtelamp
+      icon: mdi:lightbulb
+    sensor.terrarium_warmtelamp_current:
+      friendly_name: Ampere
+      icon: mdi:current-ac
+    sensor.terrarium_warmtelamp_voltage:
+      friendly_name: Voltage
+      icon: mdi:flash-outline
+    sensor.terrarium_warmtelamp_power:
+      friendly_name: Verbruik
+      icon: mdi:eye-outline
+    sensor.terrarium_warmtelamp_daily_energy:
+      friendly_name: Dagelijks verbruik
+      icon: mdi:eye-outline
+
+    switch.terrarium_fogger_relay:
+      friendly_name: Fogger
+      icon: mdi:lightbulb
+    sensor.terrarium_fogger_current:
+      friendly_name: Ampere
+      icon: mdi:current-ac
+    sensor.terrarium_fogger_voltage:
+      friendly_name: Voltage
+      icon: mdi:flash-outline
+    sensor.terrarium_fogger_power:
+      friendly_name: Verbruik
+      icon: mdi:eye-outline
+    sensor.terrarium_fogger_daily_energy:
+      friendly_name: Dagelijks verbruik
+      icon: mdi:eye-outline
+
+    sensor.terrarium_battery_level_links:
+        friendly_name: Terrarium batterij niveau links
+        
+################################################
+## Inputs
+################################################
+input_number:
+  spray_seconds:
+    name: Aantal seconden sproeien
+    icon: mdi:clock-start
+    min: 0
+    max: 60
+    step: 1
+    mode: box
+  max_temperatuur:
+    name: 'Maximale temperatuur'
+    initial: 36
+    min: 0
+    max: 40
+  min_temperatuur:
+    name: 'Minimale temperatuur'
+    initial: 25
+    min: 0
+    max: 40 
+  max_luchtvochtigheid:
+    name: 'Maximale luchtvochtigheid'
+    initial: 92
+    min: 0
+    max: 100
+  min_luchtvochtigheid:
+    name: 'Minimale luchtvochtigheid'
+    initial: 85
+    min: 0
+    max: 100
+
+input_datetime:
+####### Lampen aan/uit #########
+  uv_lamp_aan:
+    has_time: true
+  uv_lamp_uit:
+    has_time: true
+
+################################################
+## Timer
+################################################
+
+timer:
+  fogger_runtime:
+    duration: "05:00:00"
+  watersprayer_runtime:
+    duration: "00:01:00"
+
+################################################
+## Sensor
+################################################
+
+sensor:
+
+################################################
+## Template
+################################################
+template:
+  - sensor:
+    - name: "Gemiddelde luchtvochtigheid terrarium"
+      unit_of_measurement: "°C"
+      state: >
+        {% if states('sensor.terrarium_luchtvochtigheid_links')|float == 0 or states('sensor.terrarium_luchtvochtigheid_rechts')|float == 0 %}
+          {{ states('sensor.gemiddelde_luchtvochtigheid_terrarium') }}
+        {% else %}
+          {{ ( (states('sensor.terrarium_luchtvochtigheid_links')|float + states('sensor.terrarium_luchtvochtigheid_rechts')|float / 2 ) | round(2, default=0) ) }}
+        {% endif %}
+ 
+################################################
+## Automation
+################################################
+
+automation:
+
+###Activeer zomertijd tijden## 
+- alias: "Activeer de zomertijden voor terrarium"
+  trigger:
+    - platform: homeassistant
+      event: start
+    - platform: state
+      entity_id: sensor.season 
+    - platform: state
+      entity_id: sensor.season
+  action:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: sensor.season
+        state:
+          - summer
+          - spring
+      sequence:
+        - service: input_datetime.set_datetime
+          entity_id: input_datetime.uv_lamp_aan
+          data:
+            time: '07:00:00'
+        - service: input_datetime.set_datetime
+          entity_id: input_datetime.uv_lamp_uit
+          data:
+            time: '20:00:00'
+    default:
+      - service: input_datetime.set_datetime
+        entity_id: input_datetime.uv_lamp_aan
+        data:
+          time: '06:00:00'
+      - service: input_datetime.set_datetime
+        entity_id: input_datetime.uv_lamp_uit
+        data:
+          time: '19:00:00'
+
+
+###schakel watersproeier in voor xx tijd## 
+- alias: "Schakel watersproeier xx second in"
+  trigger:
+    platform: template
+    value_template: "{{ states('sensor.time') == ((state_attr('input_datetime.uv_lamp_aan', 'timestamp') - (15*60)) | int | timestamp_custom('%H:%M', False)) 
+                    or 
+                    states('sensor.time') == ((state_attr('input_datetime.uv_lamp_uit', 'timestamp') + (15*60)) | int | timestamp_custom('%H:%M', False)) }}"
+  action:
+    - service: switch.turn_on
+      entity_id: switch.terrarium_watersproeier
+    - service: timer.start
+      target:
+        entity_id: timer.watersprayer_runtime
+    - delay:
+        seconds: "{{ states('input_number.spray_seconds') | int }}"
+    - service: switch.turn_off
+      entity_id: switch.terrarium_watersproeier
+    - service: timer.cancel
+      target:
+        entity_id: timer.watersprayer_runtime
+##############################################          
+
+###schakel watersproeier uit bij te lang sproeien## 
+- alias: "Schakel watersproeier uit na te lang sproeien"
+  trigger:
+    platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: timer.watersprayer_runtime
+  action:
+    - service: switch.turn_off
+      entity_id: switch.terrarium_watersproeier
+############################################## 
+      
+###### Schakel terrarium verlichting in ######
+- alias: "Terrarium verlichting aan"
+  trigger:
+    platform: template
+    value_template: "{{ states('sensor.time') == (state_attr('input_datetime.uv_lamp_aan', 'timestamp') | int | timestamp_custom('%H:%M', False)) }}"
+  action:
+    - service: homeassistant.turn_on
+      data:
+        entity_id:
+          - switch.terrarium_uv_lamp_relay
+##############################################
+
+###### Schakel terrarium verlichting uit ######
+- alias: "Terrarium verlichting uit"
+  trigger:
+    platform: template
+    value_template: "{{ states('sensor.time') == (state_attr('input_datetime.uv_lamp_uit', 'timestamp') | int | timestamp_custom('%H:%M', False)) }}"
+  action:
+    - service: homeassistant.turn_off
+      data:
+        entity_id:
+          - switch.terrarium_uv_lamp_relay
+##############################################
+          
+####### Schakel terrarium warmtelamp in ######
+- alias: "Terrarium warmtelamp aan"
+  trigger:
+    platform: template
+    value_template: "{{ states('sensor.time') == ((state_attr('input_datetime.uv_lamp_aan', 'timestamp') + (30*60)) | int | timestamp_custom('%H:%M', False)) }}"
+  action:
+    - service: homeassistant.turn_on
+      data:
+        entity_id:
+          - switch.terrarium_warmtelamp_relay
+##############################################
+
+####### Schakel terrarium warmtelamp in ######
+- alias: "Terrarium warmtelamp aan temperatuur te laag"
+  trigger:
+    platform: numeric_state
+    entity_id: sensor.terrarium_temperatuur_rechts
+    below: input_number.min_temperatuur
+    for: '02:00:00'
+  condition:  
+    condition: time
+    after: input_datetime.uv_lamp_aan
+    before: input_datetime.uv_lamp_uit
+  action:
+    - service: homeassistant.turn_on
+      data:
+        entity_id:
+          - switch.terrarium_warmtelamp_relay
+##############################################
+
+###### Schakel terrarium warmtelamp uit ######
+- alias: "Terrarium warmtelamp uit"
+  trigger:
+  - platform: template
+    value_template: "{{ states('sensor.time') == ((state_attr('input_datetime.uv_lamp_uit', 'timestamp') - (30*60)) | int | timestamp_custom('%H:%M', False)) }}"
+  ## temperatuur te warm voor langere periode
+  - platform: numeric_state
+    entity_id: sensor.terrarium_temperatuur_rechts
+    above: input_number.max_temperatuur
+    for: '01:00:00'
+  action:
+    - service: homeassistant.turn_off
+      data:
+        entity_id:
+          - switch.terrarium_warmtelamp_relay
+##############################################
+
+
+###### Schakel terrarium fogger aan ######
+- alias: "Schakel Terrarium fogger aan"
+  trigger:
+    #Schakel fogger in op tijd
+    - platform: template
+      value_template: "{{ states('sensor.time') == ((state_attr('input_datetime.uv_lamp_uit', 'timestamp') + (30*60)) | int | timestamp_custom('%H:%M', False)) }}"  
+  action:
+    - service: homeassistant.turn_on
+      data:
+        entity_id:
+          - switch.terrarium_fogger_relay
+    - service: timer.start
+      target:
+        entity_id: timer.fogger_runtime         
+##############################################
+
+###### Schakel terrarium fogger aan lage luchtvochtigheid ######
+- alias: "Schakel Terrarium fogger aan lage LV"
+  trigger:
+    #Schakel fogger in op lage LV  
+    - platform: numeric_state
+      entity_id: sensor.gemiddelde_luchtvochtigheid_terrarium
+      below: input_number.min_luchtvochtigheid
+      for: '00:15:00'
+  condition:
+    condition: or  
+    conditions:
+      - condition: template
+        value_template: "{{ states('sensor.time') >= ((state_attr('input_datetime.uv_lamp_uit', 'timestamp') + (60*60)) | int | timestamp_custom('%H:%M', False)) }}"
+      - condition: template
+        value_template: "{{ states('sensor.time') <= ((state_attr('input_datetime.uv_lamp_aan', 'timestamp') - (60*60)) | int | timestamp_custom('%H:%M', False)) }}"
+  action:
+    - service: homeassistant.turn_on
+      data:
+        entity_id:
+          - switch.terrarium_fogger_relay
+    - service: timer.start
+      target:
+        entity_id: timer.fogger_runtime       
+##############################################
+
+###### Schakel terrarium fogger uit ######
+- alias: "Terrarium fogger uit"
+  trigger:
+    # Luchtvochtigheid bereikt
+    - platform: numeric_state
+      entity_id: sensor.gemiddelde_luchtvochtigheid_terrarium
+      above: input_number.max_luchtvochtigheid
+      for: '00:15:00'
+    # Fogger uitschakelen voor lampen inschakelen
+    - platform: template
+      value_template: "{{ states('sensor.time') == ((state_attr('input_datetime.uv_lamp_aan', 'timestamp') - (60*60)) | int | timestamp_custom('%H:%M', False)) }}"
+    # Fogger uitschakelen door maximale run tijd  
+    - platform: event
+      event_type: timer.finished
+      event_data:
+        entity_id: timer.fogger_runtime
+  action:
+    - service: homeassistant.turn_off
+      data:
+        entity_id:
+          - switch.terrarium_fogger_relay
+    - service: timer.cancel
+      target:
+        entity_id: timer.fogger_runtime   
+

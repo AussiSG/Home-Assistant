@@ -1,0 +1,24 @@
+################################################
+## Packages / Device tracker
+################################################
+homeassistant:
+
+################################################
+## Device tracker
+################################################
+device_tracker:
+  - platform: ddwrt
+    host: !secret ip_address_router_hall
+    consider_home: 30
+    username: !secret router_user
+    password: !secret router_pass
+    new_device_defaults:
+      track_new_devices: false
+
+  - platform: ddwrt
+    host: !secret ip_address_router_attic
+    consider_home: 30
+    username: !secret router_user
+    password: !secret router_pass
+    new_device_defaults:
+      track_new_devices: false

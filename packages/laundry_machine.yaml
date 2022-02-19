@@ -1,0 +1,91 @@
+################################################
+## Packages / Laundry machine
+################################################
+homeassistant:
+  customize:
+    sensor.energie_wasmachine_current:
+      friendly_name: Ampere
+      icon: mdi:current-ac
+    sensor.energie_wasmachine_voltage:
+      friendly_name: Voltage
+      icon: mdi:flash-outline
+    sensor.energie_wasmachine_power:
+      friendly_name: Verbruik
+      icon: mdi:eye-outline
+    sensor.energie_wasmachine_daily_energy:
+      friendly_name: Dagelijks verbruik
+      icon: mdi:eye-outline
+################################################
+## Inputs
+################################################
+input_boolean:
+  wasmachine_ingeschakeld:
+    name: Was machine actief
+
+
+
+################################################
+## Sensors
+################################################
+sensor:
+- platform: template
+  sensors:
+    wasmachine_afgerond:
+      friendly_name: Wasmachine klaar
+      value_template: "{{ states('sensor.energie_wasmachine_power') | float < 3.0 }}"
+
+- platform: template
+  sensors:
+    wasmachine_actief:
+      friendly_name: Wasmachine actief
+      value_template: "{{ states('sensor.energie_wasmachine_power') | float >= 10.0 }}"
+
+################################################
+## Automation
+################################################
+
+automation:
+
+################################################
+## Laundry machine has started
+################################################  
+- alias: 'Wasmachine gestart'
+  trigger:
+    platform: state
+    entity_id: sensor.wasmachine_actief
+    from: 'False'
+    to: 'True'
+  action:
+    service: input_boolean.turn_on
+    entity_id: input_boolean.wasmachine_ingeschakeld
+################################################ 
+
+################################################
+## Laundry machine finished , send notification
+################################################  
+- alias: 'Wasmachine klaar + notify'
+  trigger:
+    platform: state
+    entity_id: sensor.wasmachine_afgerond
+    from: 'False'
+    to: 'True'
+    for:
+      seconds: 30 
+  condition:
+    condition: and
+    conditions:
+      - condition: state
+        entity_id: input_boolean.wasmachine_ingeschakeld
+        state: 'on'
+      - condition: state
+        entity_id: binary_sensor.energie_wasmachine_status
+        state:  'on'
+  action:
+    - service: notify.family
+      data:
+        title: 'Wasmachine klaar, ophangen maar'
+        message: 'Doorlooptijd: {{ ((as_timestamp(now())-as_timestamp(states.input_boolean.wasmachine_ingeschakeld.last_changed))/60) | round | int }} minuten.'
+    - service: input_boolean.turn_off
+      entity_id: input_boolean.wasmachine_ingeschakeld
+################################################  
+
