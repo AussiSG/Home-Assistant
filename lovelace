@@ -1,0 +1,660 @@
+background: var(--background-image)
+custom_header:
+  compact_mode: true
+views:
+  - badges: []
+    cards:
+      - control:
+          _headings: false
+          _icons: true
+          hvac:
+            auto:
+              icon: mdi:autorenew
+              name: Schema
+            heat:
+              icon: mdi:fire
+              name: Verwarmen
+          preset:
+            asleep:
+              icon: mdi:sleep
+              name: Slapen
+            away:
+              icon: mdi:logout
+              name: Weg
+            home:
+              icon: mdi:home
+              name: Thuis
+            no_frost:
+              icon: mdi:snowflake
+              name: Antivorst
+            vacation:
+              icon: mdi:airplane-takeoff
+              name: Vakantie
+        entity: climate.anna
+        hide:
+          state: true
+          temperature: true
+        icon: '[object Object]'
+        label:
+          temperature: Temperatuur
+        name: Woonkamer
+        sensors:
+          - attribute: current_temperature
+            entity: climate.anna
+            icon: mdi:home-thermometer-outline
+            unit: ' °C'
+          - entity: sensor.auxiliary_water_pressure
+            icon: mdi:gauge
+            name: CV druk
+          - entity: sensor.auxiliary_water_temperature
+            icon: mdi:coolant-temperature
+            name: CV Temperatuur
+          - entity: binary_sensor.auxiliary_dhw_state
+            icon: mdi:water-pump
+            name: W.W.Afname
+        type: custom:simple-thermostat
+        layout:
+          mode:
+            icons: true
+            headings: false
+            names: false
+          step: column
+        header: false
+        step_size: '0.5'
+        decimals: '1'
+      - entities:
+          - entity: switch.momentary_toggle_lights
+          - entity: light.woonkamer_lampen
+            type: custom:slider-entity-row
+          - entity: switch.wcd_schuurverlichting
+          - entity: light.tv_audio_ps4
+          - entity: input_boolean.record_on
+          - entity: input_boolean.vakantie
+        show_header_toggle: false
+        state_color: true
+        type: entities
+    icon: mdi:home-outline
+    path: default_view
+    title: Huis
+  - title: Terrarium
+    path: terrarium
+    icon: mdi:snake
+    badges: []
+    cards:
+      - type: custom:stack-in-card
+        cards:
+          - type: custom:text-divider-row
+            text: Terrarium
+          - type: entities
+            entities:
+              - entity: switch.terrarium_uv_lamp_relay
+                state_color: true
+              - entity: switch.terrarium_warmtelamp_relay
+                state_color: true
+              - entity: switch.terrarium_watersproeier
+                state_color: true
+              - entity: switch.terrarium_fogger_relay
+                state_color: true
+              - entity: input_number.spray_seconds
+          - type: custom:text-divider-row
+            text: Terrarium
+          - type: horizontal-stack
+            cards:
+              - type: custom:tempometer-gauge-card
+                entity: sensor.terrarium_temperatuur_links
+                min: 15
+                max: 50
+                title: Temperatuur links
+                decimals: 1
+                card_style: custom
+                icon1: mdi:thermometer-low
+                icon2: mdi:thermometer
+                icon3: mdi:thermometer-high
+                severity:
+                  green: 18
+                  yellow: 25
+                  red: 40
+              - type: custom:tempometer-gauge-card
+                entity: sensor.terrarium_luchtvochtigheid_links
+                min: 0
+                max: 100
+                title: Luchtvochtigheid links
+                decimals: 0
+                card_style: custom
+                icon1: mdi:water-off
+                icon2: mdi:water-percent
+                icon3: mdi:water
+                severity:
+                  green: 40
+                  yellow: 70
+                  red: 80
+          - type: horizontal-stack
+            cards:
+              - type: custom:tempometer-gauge-card
+                entity: sensor.terrarium_temperatuur_rechts
+                min: 15
+                max: 40
+                title: Temperatuur rechts
+                decimals: 1
+                card_style: custom
+                icon1: mdi:thermometer-low
+                icon2: mdi:thermometer
+                icon3: mdi:thermometer-high
+                severity:
+                  green: 30
+                  yellow: 33
+                  red: 35
+              - type: custom:tempometer-gauge-card
+                entity: sensor.terrarium_luchtvochtigheid_rechts
+                min: 0
+                max: 100
+                title: Luchtvochtigheid rechts
+                decimals: 0
+                card_style: custom
+                icon1: mdi:water-off
+                icon2: mdi:water-percent
+                icon3: mdi:water
+                severity:
+                  green: 20
+                  yellow: 70
+                  red: 80
+      - type: custom:stack-in-card
+        cards:
+          - type: custom:text-divider-row
+            text: UV Lamp
+          - type: glance
+            entities:
+              - entity: sensor.terrarium_uv_lamp_power
+              - entity: sensor.terrarium_uv_lamp_voltage
+              - entity: sensor.terrarium_uv_lamp_current
+          - type: custom:text-divider-row
+            text: Warmtelamp
+          - type: glance
+            entities:
+              - entity: sensor.terrarium_warmtelamp_power
+              - entity: sensor.terrarium_warmtelamp_voltage
+              - entity: sensor.terrarium_warmtelamp_current
+          - type: custom:text-divider-row
+            text: Fogger
+          - type: glance
+            entities:
+              - entity: sensor.terrarium_fogger_power
+              - entity: sensor.terrarium_fogger_voltage
+              - entity: sensor.terrarium_fogger_current
+  - badges: []
+    cards:
+      - cards:
+          - content: >
+              # <font color =
+              {{states('sensor.afvalwijzer_color')}}>Afvalwijzer</font>
+
+              <ha-icon icon= {{'mdi:delete-alert' if
+              states('sensor.afvalwijzer_firstdate') == 'vandaag' else
+              'mdi:delete-outline'}}> </ha-icon> Vandaag,
+              {{states('sensor.today_date_full')}}: <font color=
+              {{states('sensor.afvalwijzer_color')}}>**{{states('sensor.afvalwijzer_today')}}</font>**
+
+              <ha-icon icon= {{states('sensor.afvalwijzer_next_icon')}}>
+              </ha-icon> Volgende afval-ophaal over **<font
+              color={{states('sensor.afvalwijzer_next_color')}}>{{states('sensor.afvalwijzer_next_in_days')}}</font>**
+              {{'dag' if states('sensor.afvalwijzer_first_next_in_days') == '1'
+              else 'dagen'}} op:
+
+              <ha-icon icon= 'mdi:delete-alert'> </ha-icon>
+              {{states('sensor.afvalwijzer_first_next_date_formatted')|capitalize}}:
+              **<font
+              color={{states('sensor.afvalwijzer_next_color')}}>{{states('sensor.afvalwijzer_next_type')|capitalize}}</font>**
+            type: markdown
+          - cards:
+              - entity: sensor.afvalwijzer_today
+                name: Vandaag
+                show_state: false
+                state_image:
+                  Geen: /local/mijnafvalwijzer/geenafval.png
+                  gft: /local/mijnafvalwijzer/gft3.png
+                  papier: /local/mijnafvalwijzer/papier3.png
+                  pmd: /local/mijnafvalwijzer/plastic3.png
+                  kerstbomen: /local/mijnafvalwijzer/kerstbomen3.png
+                  kerstbomen, gft: /local/mijnafvalwijzer/kerstbomen_gft3.png
+                type: picture-entity
+              - entity: sensor.afvalwijzer_tomorrow
+                name: Morgen
+                show_state: false
+                state_image:
+                  Geen: /local/mijnafvalwijzer/geenafval.png
+                  gft: /local/mijnafvalwijzer/gft3.png
+                  papier: /local/mijnafvalwijzer/papier3.png
+                  pmd: /local/mijnafvalwijzer/plastic3.png
+                  kerstbomen: /local/mijnafvalwijzer/kerstbomen3.png
+                  kerstbomen, gft: /local/mijnafvalwijzer/kerstbomen_gft3.png
+                type: picture-entity
+            type: horizontal-stack
+          - card:
+              title: Volgende ophaaldata
+              type: entities
+            filter:
+              include:
+                - entity_id: sensor.afvalwijzer_*_next
+                  options:
+                    secondary: >
+                      {% set count = states(config.entity)|int %}    {% set day
+                      = state_attr(config.entity,'Dag') %}  {% set unit = 'Dag'
+                      if count == 1 else 'dagen' %} {% if count >= 14 %} {% set
+                      phrase = day + ' over 2 weken' %} {% elif count >= 7 %} {%
+                      set phrase = 'Volgende week ' + day %} {% elif count >= 3
+                      %} {% set phrase = 'komende ' + day %} {% elif count == 2
+                      %} {% set phrase = day + ', overmorgen' %} {% elif count
+                      == 1 %} {% set phrase = 'morgen, ' + day %} {% else %} {%
+                      set phrase = 'Vandaag, ' + day %} {% endif %} {{phrase}}
+                      {% if count != 0%} ({{count}} {{unit}}) {% endif %}
+                    state: |
+                      {{state_attr(config.entity,'Datum')}}
+                    type: custom:template-entity-row
+            sort:
+              method: state
+              numeric: true
+            type: custom:auto-entities
+          - entities:
+              - entity: input_boolean.trash_moved
+                name: Afval buitengezet
+            show_header_toggle: false
+            type: entities
+        type: custom:vertical-stack-in-card
+    icon: mdi:trash-can-outline
+    path: afval
+    title: Afval
+  - badges: []
+    cards:
+      - cards:
+          - type: custom:text-divider-row
+            text: Weerstation achtertuin
+          - type: horizontal-stack
+            cards:
+              - type: custom:tempometer-gauge-card
+                entity: sensor.achtertuin_temperatuur
+                min: -10
+                max: 40
+                title: Temperatuur
+                decimals: 1
+                card_style: custom
+                icon1: mdi:thermometer-low
+                icon2: mdi:thermometer
+                icon3: mdi:thermometer-high
+                severity:
+                  green: 16
+                  yellow: 24
+                  red: 27
+              - type: custom:tempometer-gauge-card
+                entity: sensor.achtertuin_luchtvochtigheid
+                min: 0
+                max: 101
+                title: Luchtvochtigheid
+                decimals: 0
+                card_style: custom
+                icon1: mdi:water-off
+                icon2: mdi:water-percent
+                icon3: mdi:water
+                severity:
+                  green: 0
+                  yellow: 45
+                  red: 75
+                  max: 100
+          - type: horizontal-stack
+            cards:
+              - type: custom:tempometer-gauge-card
+                entity: sensor.achtertuin_luchtdruk
+                min: 960
+                max: 1060
+                title: Barometer
+                decimals: 0
+                severity:
+                  green: 1020
+                  yellow: 1002
+                  red: 990
+              - type: custom:tempometer-gauge-card
+                entity: sensor.achtertuin_lux
+                min: 0
+                max: 10000
+                card_style: custom
+                icon1: mdi:brightness-4
+                icon2: mdi:brightness-6
+                icon3: mdi:brightness-5
+                title: Lichtsterkte
+                decimals: 0
+                severity:
+                  green: 2000
+                  yellow: 6000
+                  red: 8000
+          - cards:
+              - type: custom:text-divider-row
+                text: Weersverwachting
+              - current: true
+                details: false
+                entity: weather.buienradar
+                forecast: true
+                hourly_forecast: false
+                name: Overvecht
+                number_of_forecasts: 5
+                style: |
+                  span.title {
+                    font-size: 2.5em;
+                    top: 1.5em;
+                    left: 3.2em;
+                  }
+                  span.temp {
+                    font-size: 2.5em;
+                    top: 0.6em;
+                    right: 1.4em;
+                  }  
+                  span.tempc {
+                    margin-top: -20px;
+                    font-size: 1.5em;
+                    right: 1em;
+                  }  
+                type: custom:weather-card
+            type: vertical-stack
+          - cards:
+              - type: custom:text-divider-row
+                text: Actuele neerslag
+              - type: custom:neerslag-card
+                entity: sensor.neerslag_buienalarm_regen_data
+            type: vertical-stack
+        mode: vertical
+        keep:
+          box_shadow: true
+          border_radius: false
+          margin: true
+        type: custom:stack-in-card
+    icon: mdi:weather-partly-rainy
+  - badges: []
+    cards:
+      - cards:
+          - cards:
+              - defaultMode: Calendar
+                enableModeChange: true
+                entities:
+                  - color: yellow
+                    entity: calendar.sandra_gmail
+                    icon: mdi:star
+                  - color: red
+                    entity: calendar.gezin
+                    icon: mdi:home-heart
+                eventBarColor: blue
+                name: Agenda
+                progressBarColor: blue
+                showColors: true
+                showDate: true
+                showMonth: true
+                showProgressBar: true
+                type: custom:atomic-calendar-revive
+            type: vertical-stack
+        mode: vertical
+        type: custom:stack-in-card
+    icon: mdi:calendar-month
+  - icon: mdi:disc-player
+    title: Media
+    badges: []
+    cards:
+      - hide:
+          power_state: false
+        type: custom:mini-media-player
+        source: full
+        shortcuts:
+          columns: 3
+          buttons:
+            - type: source
+              id: 538 102.1 (Top 40 %26 Pop Music)
+              image: /local/radiozenders/Radio538.jpg
+            - type: source
+              id: Qmusic 100.4 (Top 40 %26 Pop Music)
+              image: /local/radiozenders/Qmusic.jpg
+            - type: source
+              id: SLAM! 91.1 (Top 40 %26 Pop Music)
+              image: /local/radiozenders/SlamFM.jpg
+            - type: source
+              id: NPO 3FM 96.8 (Top 40 %26 Pop Music)
+              image: /local/radiozenders/3fm.jpg
+            - type: source
+              id: Radio M Utrecht 93.1 (News)
+              image: /local/radiozenders/RadioMutrecht.jpg
+        entity: media_player.denon_avr_x2700h
+      - hide:
+          power_state: false
+        type: custom:mini-media-player
+        source: full
+        shortcuts:
+          columns: 3
+          buttons:
+            - type: source
+              id: 538 102.1 (Top 40 %26 Pop Music)
+              image: /local/radiozenders/Radio538.jpg
+            - type: source
+              id: Qmusic 100.4 (Top 40 %26 Pop Music)
+              image: /local/radiozenders/Qmusic.jpg
+            - type: source
+              id: SLAM! 91.1 (Top 40 %26 Pop Music)
+              image: /local/radiozenders/SlamFM.jpg
+            - type: source
+              id: NPO 3FM 96.8 (Top 40 %26 Pop Music)
+              image: /local/radiozenders/3fm.jpg
+            - type: source
+              id: Radio M Utrecht 93.1 (News)
+              image: /local/radiozenders/RadioMutrecht.jpg
+        entity: media_player.slaapkamer_1
+      - hide:
+          power_state: false
+        type: custom:mini-media-player
+        source: full
+        shortcuts:
+          columns: 3
+          buttons:
+            - type: source
+              id: 538 102.1 (Top 40 %26 Pop Music)
+              image: /local/radiozenders/Radio538.jpg
+            - type: source
+              id: Qmusic 100.4 (Top 40 %26 Pop Music)
+              image: /local/radiozenders/Qmusic.jpg
+            - type: source
+              id: SLAM! 91.1 (Top 40 %26 Pop Music)
+              image: /local/radiozenders/SlamFM.jpg
+            - type: source
+              id: NPO 3FM 96.8 (Top 40 %26 Pop Music)
+              image: /local/radiozenders/3fm.jpg
+            - type: source
+              id: Radio M Utrecht 93.1 (News)
+              image: /local/radiozenders/RadioMutrecht.jpg
+        entity: media_player.slaapkamer_2
+  - badges: []
+    cards:
+      - aspect_ratio: 75%
+        camera_image: camera.straatkant
+        camera_view: live
+        entity: camera.straatkant
+        show_state: false
+        type: picture-entity
+        show_name: false
+    icon: mdi:cctv
+    path: cameras
+    title: Camera's
+  - icon: mdi:gauge
+    path: smartmeter
+    theme: ''
+    title: Smartmeter
+    badges: []
+    cards:
+      - type: custom:stack-in-card
+        mode: vertical
+        cards:
+          - type: custom:text-divider-row
+            text: Energie verbruik
+          - type: gauge
+            entity: sensor.power_consumption
+            needle: true
+            min: 0
+            max: 20
+            severity:
+              green: 0
+              yellow: 10
+              red: 15
+            name: Actueel
+          - type: entities
+            entities:
+              - entity: sensor.daily_energy
+              - entity: sensor.monthly_energy
+              - entity: sensor.daily_gas
+              - entity: sensor.monthly_gas
+          - type: custom:text-divider-row
+            text: Energie opwekking
+          - type: gauge
+            entity: sensor.pv_power_output
+            min: 0
+            max: 3630
+            severity:
+              green: 3000
+              yellow: 1500
+              red: 0
+            needle: true
+            name: Actueel
+          - type: entities
+            entities:
+              - entity: sensor.pv_energy_today
+                name: Huidig opgewekte energie
+              - entity: sensor.pv_emonth
+                name: Maandelijkes opgewekte energie
+      - type: custom:stack-in-card
+        cards:
+          - type: custom:text-divider-row
+            text: 3D Printer
+          - type: glance
+            entities:
+              - entity: sensor.energie_3dprinter_power
+              - entity: sensor.energie_3dprinter_voltage
+              - entity: sensor.energie_3dprinter_current
+              - entity: sensor.energie_3dprinter_daily_energy
+          - type: custom:text-divider-row
+            text: Wasmachine
+          - type: glance
+            entities:
+              - entity: sensor.energie_wasmachine_power
+              - entity: sensor.energie_wasmachine_voltage
+              - entity: sensor.energie_wasmachine_current
+              - entity: sensor.energie_wasmachine_daily_energy
+  - badges: []
+    cards:
+      - cards:
+          - type: horizontal-stack
+            cards:
+              - type: custom:tempometer-gauge-card
+                entity: sensor.rpi_cpu_temperature
+                min: 0
+                max: 85
+                title: CPU Temp.
+                decimals: 1
+                card_style: custom
+                icon1: mdi:thermometer-low
+                icon2: mdi:thermometer
+                icon3: mdi:thermometer-high
+                severity:
+                  green: 40
+                  yellow: 60
+                  red: 70
+              - type: custom:tempometer-gauge-card
+                entity: sensor.rpi_gpu_temperature
+                min: 0
+                max: 85
+                title: GPU Temp.
+                decimals: 1
+                card_style: custom
+                icon1: mdi:thermometer-low
+                icon2: mdi:thermometer
+                icon3: mdi:thermometer-high
+                severity:
+                  green: 40
+                  yellow: 60
+                  red: 70
+          - cards:
+              - entity: sensor.speedtest_download
+                graph: line
+                icon: mdi:download-outline
+                name: Download
+                style: |
+                  .value {
+                  font-size: 20px !important;
+                  }        
+                type: sensor
+              - entity: sensor.speedtest_upload
+                graph: line
+                icon: mdi:upload-outline
+                name: Upload
+                style: |
+                  .value {
+                  font-size: 20px !important;
+                  }       
+                type: sensor
+            type: horizontal-stack
+          - cards:
+              - entity: sensor.myip
+                icon: mdi:earth
+                name: Externe IP
+                style: |
+                  .value {
+                  font-size: 20px !important;
+                  }        
+                type: sensor
+              - entity: sensor.speedtest_ping
+                graph: line
+                icon: mdi:upload-outline
+                name: Ping
+                style: |
+                  .value {
+                  font-size: 20px !important;
+                  }
+                type: sensor
+            type: horizontal-stack
+        keep:
+          margin: true
+        mode: vertical
+        type: custom:stack-in-card
+    icon: mdi:desktop-classic
+    path: system
+    title: System
+  - title: Alarmpanel
+    path: alarmpanel
+    icon: mdi:alarm-panel-outline
+    badges: []
+    cards:
+      - type: alarm-panel
+        states:
+          - arm_away
+        entity: alarm_control_panel.home_ge_alarm
+        name: Alarmpaneel
+  - icon: mdi:battery
+    badges: []
+    cards:
+      - type: custom:battery-state-card
+        title: Batterij niveau
+        color_gradient:
+          - '#ff0000'
+          - '#ffff00'
+          - '#00ff00'
+        entities:
+          - entity: sensor.mi_a3_battery_level
+            name: Sanders telefoon
+          - entity: sensor.sm_a405fn_battery_level
+            name: Sandra's telefoon
+          - entity: sensor.schuifpui_battery
+            name: Schuifpui deurcontact
+          - entity: sensor.voordeur_battery
+            name: Voordeur deurcontact
+          - entity: sensor.wc_deur_battery
+            name: WC deur deurcontact
+          - entity: sensor.wc_pir_battery
+            name: WC PIR
+          - entity: sensor.woonkamerschakelaar_battery
+            name: Woonkamer schakelaar
+          - entity: sensor.terrarium_battery_level_links
+            name: Terrarium temperatuur links
+          - entity: sensor.terrarium_battery_level_rechts
+            name: Terrarium temperatuur rechts
+          - entity: sensor.achtertuin_batterij_level
+            name: Weerstation achtertuin
