@@ -29,13 +29,13 @@ sensor:
   sensors:
     wasmachine_afgerond:
       friendly_name: Wasmachine klaar
-      value_template: "{{ states('sensor.energie_wasmachine_power') | float < 2.0 }}"
+      value_template: "{{ states('sensor.wcd_wasmachine_power') | float < 2.0 }}"
 
 - platform: template
   sensors:
     wasmachine_actief:
       friendly_name: Wasmachine actief
-      value_template: "{{ states('sensor.energie_wasmachine_power') | float >= 10.0 }}"
+      value_template: "{{ states('sensor.wcd_wasmachine_power') | float >= 10.0 }}"
 
 ################################################
 ## Automation
@@ -79,9 +79,6 @@ automation:
       - condition: state
         entity_id: input_boolean.wasmachine_ingeschakeld
         state: 'on'
-      - condition: state
-        entity_id: binary_sensor.energie_wasmachine_status
-        state:  'on'
   action:
     - service: notify.family
       data:
