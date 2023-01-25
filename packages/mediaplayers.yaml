@@ -1,0 +1,61 @@
+################################################
+## Packages / Mediaplayers
+################################################
+homeassistant:
+  
+
+
+################################################
+## Script
+################################################
+
+script:
+
+  play_npo_3:
+    sequence:
+      - service: media_player.play_media
+        data: 
+          entity_id: "{{ heos_entity }}"
+          media_content_type: favorite
+          media_content_id: 'NPO 3FM 96.8 (Top 40 %26 Pop Music)'
+
+  play_qmusic:
+    sequence:
+      - service: media_player.play_media
+        data: 
+          entity_id: "{{ heos_entity }}"
+          media_content_type: favorite
+          media_content_id: 'Qmusic 100.4 (Top 40 %26 Pop Music)'
+
+  play_radio_m:
+    sequence:
+      - service: media_player.play_media
+        data: 
+          entity_id: "{{ heos_entity }}"
+          media_content_type: favorite
+          media_content_id: 'Radio M Utrecht 93.1 (News)'
+
+  play_slam:
+    sequence:
+      - service: media_player.play_media
+        data: 
+          entity_id: "{{ heos_entity }}"
+          media_content_type: favorite
+          media_content_id: 'SLAM! 91.1 (Top 40 %26 Pop Music)'
+
+  play_538:
+    sequence:
+      - service: media_player.play_media
+        data: 
+          entity_id: "{{ heos_entity }}"
+          media_content_type: favorite
+          media_content_id: '538 102.1 (Top 40 %26 Pop Music)'
+
+  play_spotify_1:
+    sequence:
+      - service: media_player.play_media
+        target:
+          entity_id: media_player.spotify_goes_sander
+        data:
+          media_content_id: "https://open.spotify.com/playlist/3gYXeCse54UGpthjliceVy?si=4aef9c3a8a1748a6"
+          media_content_type: playlist

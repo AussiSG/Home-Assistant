@@ -1,0 +1,17 @@
+################################################
+## Packages / Proxmox VE
+################################################
+homeassistant:
+
+proxmoxve:
+  - host: !secret proxmox_ip_address
+    username: !secret proxmox_user
+    password: !secret proxmox_pass
+    realm: pve
+    verify_ssl: false
+    nodes:
+      - node: sandersve
+        vms:
+          - 100
+        containers:
+          - 101

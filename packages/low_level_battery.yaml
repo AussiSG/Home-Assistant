@@ -13,6 +13,7 @@ homeassistant:
 automation:
 
 - alias: Low battery level detection & notification for all battery sensors
+  id: '700'
   description: ''
   use_blueprint:
     path: sbyx/low-battery-level-detection-notification-for-all-battery-sensors.yaml
@@ -22,8 +23,11 @@ automation:
       day: 0
       exclude:
         entity_id:
-        - sensor.mi_a3_battery_level
-        - sensor.sm_a405fn_battery_level
+        - sensor.body_battery_charged
+        - sensor.body_battery_drained
+        - sensor.body_battery_highest
+        - sensor.body_battery_lowest
+        - sensor.body_battery_most_recent
         device_id:
       actions:
       - service: notify.sander

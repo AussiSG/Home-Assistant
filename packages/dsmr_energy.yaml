@@ -4,23 +4,57 @@
 homeassistant:
   customize:
     sensor.daily_energy_offpeak:
-      friendly_name: "Dagelijks energievebruik tarief 1"
+      friendly_name: "Dagelijks energievebruik daltarief"
       unit: "kWh"
+      icon: mdi:home-lightning-bolt-outline
     sensor.daily_energy_peak:
-      friendly_name: "Dagelijks energievebruik tarief 2"
+      friendly_name: "Dagelijks energievebruik normaaltarief"
       unit: "kWh"
+      icon: mdi:home-lightning-bolt-outline
     sensor.monthly_energy_offpeak:
-      friendly_name: "Dagelijks energievebruik tarief 1"
+      friendly_name: "Dagelijks energievebruik daltarief"
       unit: "kWh"
+      icon: mdi:home-lightning-bolt-outline
     sensor.monthly_energy_peak:
-      friendly_name: "Dagelijks energievebruik tarief 2"
+      friendly_name: "Dagelijks energievebruik normaaltarief"
       unit: "kWh"
+      icon: mdi:home-lightning-bolt-outline
+    sensor.daily_energy:
+      friendly_name: "Dagelijks Energieverbruik"
+      unit_of_measurement: "kWh"
+      icon: mdi:home-lightning-bolt-outline
     sensor.daily_gas:
       friendly_name: "Dagelijks Gasverbruik"
       unit: "m3"
+      icon: mdi:fire
     sensor.monthly_gas:
       friendly_name: "Maandelijks Gasverbruik"
       unit: "m3"
+      icon: mdi:fire
+    sensor.monthly_energy:
+      friendly_name: "Maandelijk Energieverbruik"
+      unit_of_measurement: "kWh"
+      icon: mdi:home-lightning-bolt-outline
+    sensor.daily_energy_cost:
+      friendly_name: "Dagelijks Energiekosten"
+      unit_of_measurement: "€"
+      icon: mdi:home-lightning-bolt-outline
+    sensor.monthly_energy_cost:
+      friendly_name: "Maandelijk Energiekosten"
+      unit_of_measurement: "€"
+      icon: mdi:home-lightning-bolt-outline
+    sensor.daily_gas_cost:
+      friendly_name: "Dagelijkse gaskosten"
+      unit_of_measurement: "€"
+      icon: mdi:fire
+    sensor.monthly_gas_cost:
+      friendly_name: "Maandelijkse gaskosten"
+      unit_of_measurement: "€"
+      icon: mdi:fire
+    sensor.total_monthly_costs:
+      friendly_name: "Totale maandelijkse energie kosten"
+      unit_of_measurement: "€"      
+  
 ################################################
 ## Utility meter 
 ################################################
@@ -32,7 +66,7 @@ utility_meter:
     source: sensor.energy_consumption_tarif_2
     cycle: daily
   daily_gas:
-    source: sensor.hourly_gas_consumption
+    source: sensor.gas_consumption
     cycle: daily
   monthly_energy_offpeak:
     source: sensor.energy_consumption_tarif_1
@@ -43,19 +77,96 @@ utility_meter:
   monthly_gas:
     source: sensor.gas_consumption
     cycle: monthly
-
+  
 ################################################
 ## Sensor
 ################################################
-sensor:
+  
+template:
+  - sensor:
 
-- platform: template
-  sensors:
-    daily_energy:
-      friendly_name: "Dagelijks Energieverbruik"
-      unit_of_measurement: kWh
-      value_template: "{{ ( states('sensor.daily_energy_offpeak')|float + states('sensor.daily_energy_peak')| float ) | round(2) }}"
-    monthly_energy:
-      friendly_name: "Maandelijk Energieverbruik"
-      unit_of_measurement: kWh
-      value_template: "{{ ( states('sensor.monthly_energy_offpeak')|float + states('sensor.monthly_energy_peak')|float ) | round(2) }}"
+    - name: "Offpeak kwh cost"
+      unit_of_measurement: € 
+      state: "0.26397"    
+
+    - name: "Peak kwh cost"
+      unit_of_measurement: €
+      state:  "0.32503"
+
+    - name: "Gas cost"
+      unit_of_measurement: €
+      state:  "1.02351"
+
+    - name: "Monthly energy paid" 
+      unit_of_measurement:  € 
+      state: "150.0"
+
+    - name: "Deliver cost"
+      unit_of_measurement: €
+      state: "5.84"
+
+    - name: "Daily energy"
+      state: >
+        {{ ( states('sensor.daily_energy_offpeak')|float + states('sensor.daily_energy_peak')| float ) | round(2) }}
+      availability: "{{ (states('sensor.daily_energy_offpeak') not in ['unavailable', 'unknown']) and (states('sensor.daily_energy_peak') not in ['unavailable', 'unknown']) }}"
+    
+    - name: "Monthly energy"
+      state: >
+        {{ ( states('sensor.monthly_energy_offpeak')|float + states('sensor.monthly_energy_peak')|float ) | round(2) }}
+      availability: >
+        {{ (states('sensor.monthly_energy_offpeak') not in ['unavailable', 'unknown']) 
+        and (states('sensor.monthly_energy_peak') not in ['unavailable', 'unknown']) }}
+
+    - name: "Daily energy cost"
+      state: >
+        {{ (( states('sensor.daily_energy_offpeak')|float * states('sensor.offpeak_kwh_cost')|float ) 
+            + ( states('sensor.daily_energy_peak')| float * states('sensor.peak_kwh_cost')|float )) | round(2) }}
+      availability: >  
+        {{ (states('sensor.daily_energy_offpeak') not in ['unavailable', 'unknown']) 
+        and (states('sensor.offpeak_kwh_cost') not in ['unavailable', 'unknown']) 
+        and (states('sensor.daily_energy_peak') not in ['unavailable', 'unknown'])
+        and (states('sensor.peak_kwh_cost') not in ['unavailable', 'unknown']) }}
+          
+    - name: "Monthly energy cost"
+      state: >
+        {{ (( states('sensor.monthly_energy_offpeak')|float * states('sensor.offpeak_kwh_cost')|float ) 
+            + ( states('sensor.monthly_energy_peak')| float * states('sensor.peak_kwh_cost')|float + states('sensor.deliver_cost')|float )) | round(2) }}
+      availability: >  
+        {{ (states('sensor.daily_energy_offpeak') not in ['unavailable', 'unknown']) 
+        and (states('sensor.offpeak_kwh_cost') not in ['unavailable', 'unknown']) 
+        and (states('sensor.daily_energy_peak') not in ['unavailable', 'unknown'])
+        and (states('sensor.peak_kwh_cost') not in ['unavailable', 'unknown']) }}
+
+    - name: "Daily gas cost"
+      state: >
+        {{ (( states('sensor.daily_gas')|float * states('sensor.gas_cost')|float )) | round(2) }}
+      availability: > 
+        {{ states('sensor.daily_gas') not in ['unavailable', 'unknown'] 
+        and states('sensor.gas_cost') not in ['unavailable', 'unknown'] }}
+
+    - name: "Monthly gas cost"
+      state: >
+        {{ ((( states('sensor.monthly_gas')|float * states('sensor.gas_cost')|float )) + states('sensor.deliver_cost')|float ) | round(2) }}
+      availability: >  
+        {{ states('sensor.monthly_gas') not in ['unavailable', 'unknown'] 
+        and states('sensor.gas_cost') not in ['unavailable', 'unknown'] 
+        and states('sensor.deliver_cost') not in ['unavailable', 'unknown'] }} 
+
+    - name : "Monthly costs"
+      state:  >
+        {{ ( states('sensor.monthly_gas_cost')|float + states('sensor.monthly_energy_cost')|float ) | round(2) }}
+      availability: > 
+        {{ (states('sensor.monthly_gas_cost') not in ['unavailable', 'unknown']) 
+        and (states('sensor.monthly_energy_cost') not in ['unavailable', 'unknown']) }} 
+
+    - name : "Total monthly costs"
+      state:  >
+        {{ ( states('sensor.monthly_costs')|float) | round(2)  }}
+      icon: >
+        {% if states('sensor.monthly_costs') | float < states('sensor.monthly_energy_paid') | float %}
+          mdi:thumb-up-outline
+        {% else %}
+          mdi:thumb-down-outline
+        {% endif %}
+      availability: > 
+        {{ (states('sensor.monthly_costs') not in ['unavailable', 'unknown']) }} 

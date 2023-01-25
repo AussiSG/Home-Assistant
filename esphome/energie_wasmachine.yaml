@@ -25,6 +25,7 @@ logger:
 web_server:
   port: 80
 
+
 # Enable Home Assistant API
 api:
   password: !secret wifi_pass
@@ -73,6 +74,7 @@ switch:
   pin: GPIO13
   inverted: True
   restore_mode: ALWAYS_ON
+
 sensor:
   - platform: wifi_signal
     name: '${device_name} WiFi Signal'
@@ -98,14 +100,7 @@ sensor:
       id: "${device_name}_Power"
     change_mode_every: 8
     update_interval: 10s
-  - platform: total_daily_energy
-    name: "${device_name} Daily Energy"
-    power_id: "${device_name}_Power" 
-    filters:
-        # Multiplication factor from W to kW is 0.001
-        - multiply: 0.001
-    unit_of_measurement: kWh
-      
+    
 # Extra sensor to keep track of plug uptime
-  - platform: uptime
-    name: "${device_name} Uptime Sensor" 
+#  - platform: uptime
+#    name: "${device_name} Uptime Sensor" 

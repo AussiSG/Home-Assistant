@@ -4,7 +4,28 @@
 homeassistant:
 
 
-
+################################################
+## Sensor
+################################################
+  
+template:
+  - sensor:
+        - name: "X-mas Active"
+          state: >
+            {% set n = now() %}
+            {% if ( n.month >= 12 and ( n.day >= 5 )) or ( n.month == 1 and ( 1 <= n.day <= 6 )) %} 
+            True
+            {% else %}
+            False
+            {% endif %}
+            
+################################################
+## Input Boolean
+################################################    
+input_boolean:
+  kerstlampen_ingeschakeld:
+    name: Kerstlampen ingeschakeld
+    icon: mdi:toggle-switch-outline 
 
 ################################################
 ## Automation
@@ -13,6 +34,7 @@ homeassistant:
 automation:    
 ###### Schakel kerstverlichting in ######
 - alias: Schakel kerstverlichting in
+  id: '1501'
   trigger:
     - platform: numeric_state
       entity_id: sensor.achtertuin_lux
@@ -25,17 +47,16 @@ automation:
       to: "on"
   condition:
     condition: and
-    conditions:
-    - condition: state
-      entity_id: light.woonkamer_lampen
-      state: "off"        
+    conditions:     
     - condition: time
     # At least one of the following is required.
       before: '22:00:00'
-    - condition: template # Only between December 1 and January 6.
-      value_template: >
-        {% set n = now() %}
-        {{ ( n.month >= 12 and ( n.day >= 5 )) or ( n.month == 1 and ( 1 <= n.day <= 6 )) }}  
+    - condition: state 
+      entity_id: sensor.x_mas_active
+      state: "True"
+    - condition: state 
+      entity_id: input_boolean.kerstlampen_ingeschakeld
+      state: "off"
   action:
     - service: homeassistant.turn_on
       data:
@@ -45,18 +66,19 @@ automation:
           - light.wcd_kerstverlichting_3
           - light.wcd_kerstverlichting_4
     - service: input_boolean.turn_on
-      entity_id: input_boolean.lampen_ingeschakeld
+      entity_id: input_boolean.kerstlampen_ingeschakeld
     - delay: 
         seconds: 2
-    - service: light.turn_off
-      entity_id:
-      - light.lampbank_light
+#    - service: light.turn_off
+#      entity_id:
+#      - light.lampbank_light
       
           
 ##############################################
 
 ###### Schakel kerstverlichting uit ######
 - alias: Schakel kerst verlichting uit
+  id: '1500'
   trigger:
   # Smart drukknop op 1e verdieping  
   - entity_id: sensor.woonkamerschakelaar_click
@@ -76,13 +98,12 @@ automation:
     entity_id: sensor.achtertuin_lux
     above: 30
   condition:
-    - condition: template
-      value_template: >
-       {% set n = now() %}
-       {{ ( n.month >= 12 and ( n.day >= 5 )) or ( n.month == 1 and ( 1 <= n.day <= 6 )) }}  
+    - condition: state 
+      entity_id: sensor.x_mas_active
+      state: "True"  
     - condition: state
-      entity_id: light.woonkamer_lampen
-      state: "on"
+      entity_id: input_boolean.kerstlampen_ingeschakeld
+      state: "on" 
   action:
     - service: homeassistant.turn_off
       data:
@@ -92,5 +113,5 @@ automation:
           - light.wcd_kerstverlichting_3
           - light.wcd_kerstverlichting_4
     - service: input_boolean.turn_off
-      entity_id: input_boolean.lampen_ingeschakeld
+      entity_id: input_boolean.kerstlampen_ingeschakeld
 ##############################################

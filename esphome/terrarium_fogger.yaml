@@ -105,10 +105,3 @@ sensor:
 
     change_mode_every: 4
     update_interval: 10s
-#  - platform: total_daily_energy
-#    name: '${device_name} Daily Energy' 
-#    power_id: '${device_name}_Power'
-#    filters:
-#        # Multiplication factor from W to kW is 0.001
-#        - multiply: 0.001
-#    unit_of_measurement: kWh

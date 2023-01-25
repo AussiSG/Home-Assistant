@@ -20,7 +20,7 @@ input_boolean:
 ################################################
 
 automation:
-
+####### Reset record boolean  #######
 - alias: Reset record when set on
   trigger:
     platform: state
@@ -32,84 +32,73 @@ automation:
     - service: input_boolean.turn_off
       entity_id: input_boolean.record_on
 
-####### Schakel TV+Audio+PS4 in doordeweeks #######
-- alias: "TV+Audio+PS4 aan doordeweeks" 
+####### Schakel TV+Audio+PS4  #######
+- id: '1647763242144'
+  alias: Switch TV WCD 
+  description: ''
   trigger:
-    platform: time
-    at: '05:30:00'
-  condition:
-      condition: and
-      conditions:
-        - condition: state
-          entity_id: input_boolean.vakantie
-          state: 'off'
-        - condition: state
-          entity_id: 'binary_sensor.workday_sensor'
-          state: 'on'
+  - platform: time
+    at: 05:45:00
+  - platform: time
+    at: 06:30:00
+  - platform: time
+    at: 01:00:00
+  condition: []
   action:
-    - service: homeassistant.turn_on
-      data:
-        entity_id: light.tv_audio_ps4
-###################################################
-
-####### Schakel TV+Audio+PS4 uit doordeweeks ######
-- alias: "TV+Audio+PS4 uit doordeweeks"
-  trigger:
-    platform: time
-    at: '01:00:00'
-  condition:
-      condition: and
-      conditions:
-        - condition: state
-          entity_id: input_boolean.record_on
-          state: 'off'
-        - condition: state
-          entity_id: 'binary_sensor.workday_sensor'
-          state: 'on'
-  action:
-    - service: homeassistant.turn_off
-      data:
-        entity_id: light.tv_audio_ps4
-###################################################
-
-######## Schakel TV+Audio+PS4 in weekend ########
-- alias: "TV+Audio+PS4 aan weekend"
-  trigger:
-    platform: time
-    at: '06:30:00'
-  condition:
-      condition: and
-      conditions:
-        - condition: state
-          entity_id: input_boolean.vakantie
-          state: 'off'
-        - condition: state
-          entity_id: 'binary_sensor.workday_sensor'
-          state: 'off'
-  action:
-    - service: homeassistant.turn_on
-      data:
-        entity_id: light.tv_audio_ps4
-###################################################
-
-###### Schakel TV+Audio+PS4 uit weekend ######
-- alias: "TV+Audio+PS4 uit weekend"
-  trigger:
-    platform: time
-    at: '01:00:00'
-  condition:
-      condition: and
-      conditions:
-        - condition: state
-          entity_id: input_boolean.record_on
-          state: 'off'
-        - condition: state
-          entity_id: 'binary_sensor.workday_sensor'
-          state: 'off'
-  action:
-    - service: homeassistant.turn_off
-      data:
-        entity_id: light.tv_audio_ps4
-###################################################
-
-
+  - choose:
+    - conditions:
+# Switch on TV on workdays
+      - condition: state
+        entity_id: switch.wcd_tv_audio
+        state: 'off'
+      - condition: state
+        entity_id: input_boolean.vakantie
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.workday_sensor
+        state: 'on'
+      - condition: time
+        after: 05:44:00
+        before: 05:46:00
+      sequence:
+      - service: homeassistant.turn_on
+        data: {}
+        target:
+          entity_id: switch.wcd_tv_audio
+# Switch on TV on non workdays
+    - conditions:
+      - condition: state
+        entity_id: switch.wcd_tv_audio
+        state: 'off'
+      - condition: state
+        entity_id: input_boolean.vakantie
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.workday_sensor
+        state: 'off'
+      - condition: time
+        after: 06:29:00
+        before: 06:31:00
+      sequence:
+      - service: homeassistant.turn_on
+        data: {}
+        target:
+          entity_id: switch.wcd_tv_audio
+# Switch off TV on workdays      
+    - conditions:
+      - condition: state
+        entity_id: switch.wcd_tv_audio
+        state: 'on'
+      - condition: state
+        entity_id: input_boolean.record_on
+        state: 'off'
+      - condition: time
+        after: 00:59:00
+        before: 01:01:00
+      sequence:
+      - service: homeassistant.turn_off
+        data: {}
+        target:
+          entity_id: switch.wcd_tv_audio
+    default: []
+  mode: single

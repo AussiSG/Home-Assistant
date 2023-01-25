@@ -1,8 +1,0 @@
-################################################
-## Packages / Google
-################################################
-homeassistant:
-
-google:
-  client_id: !secret google_cal_id
-  client_secret: !secret google_secret

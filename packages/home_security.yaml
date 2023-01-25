@@ -71,12 +71,13 @@ automation:
 ## Switch on home security when away (by wifi)
 ################################################
 - alias: Schakel alarm in
+  id: '200'
   trigger:
     platform: state
     entity_id: group.familie_aanwezig_tracker
     to: "not_home"
     for:
-      minutes: 1
+      seconds: 30
   condition:
     condition: state
     entity_id: alarm_control_panel.home_ge_alarm
@@ -90,6 +91,7 @@ automation:
 ## Send notification when armed
 ################################################
 - alias: 'Bericht alarm is geactiveerd in afwezig mode'
+  id: '201'
   trigger:
     - platform: state
       entity_id: alarm_control_panel.home_ge_alarm
@@ -104,6 +106,7 @@ automation:
 ## Switch off home security when home (by wifi)
 ################################################
 - alias: Schakel alarm uit
+  id: '202' 
   trigger:
     platform: state
     entity_id: group.familie_aanwezig_tracker
@@ -119,6 +122,7 @@ automation:
 ## Send notification when disarmed
 ################################################
 - alias: 'Bericht alarm is gedeactiveerd'
+  id: '203'
   trigger:
     - platform: state
       entity_id: alarm_control_panel.home_ge_alarm
@@ -133,6 +137,7 @@ automation:
 ## Set entity which triggered alarm
 ################################################
 - alias: 'Alarm wordt getriggerd tijdens afwezigheid'
+  id: '204'
   trigger:
     - platform: state
       entity_id: 
@@ -159,6 +164,7 @@ automation:
 ## Send notification when alarm is triggered
 ################################################
 - alias: 'Stuur bericht wanneer alarm afgaat'
+  id: '205'
   trigger:
     - platform: state
       entity_id: alarm_control_panel.home_ge_alarm

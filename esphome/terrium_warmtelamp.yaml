@@ -39,6 +39,7 @@ web_server:
   port: 80
 
 binary_sensor:
+
   - platform: gpio
     id: button
     internal: true
@@ -81,7 +82,7 @@ sensor:
 
   - platform: wifi_signal
     name: '${device_name} WiFi Signal'
-    update_interval: 60s
+    update_interval: 300s
 
   - platform: hlw8012
     sel_pin:
@@ -107,11 +108,3 @@ sensor:
 
     change_mode_every: 4
     update_interval: 30s
-    
-#  - platform: total_daily_energy
-#    name: '${device_name} Daily Energy' 
-#    power_id: '${device_name}_Power'
-#    filters:
-      # Multiplication factor from W to kW is 0.001
-#        - multiply: 0.001
-#    unit_of_measurement: kWh

@@ -3,50 +3,46 @@
 ################################################
 template:
   
-# Optional/example
-# A template to ease access to the data as "sensor.pv_outputpower" etc.
-  - sensor:
-    - name:  PV Power output
-      device_class: power
-      state_class: measurement
-      unit_of_measurement: 'W' 
-      state: "{{ state_attr('sensor.inverter_goes', 'pac') | float }}"  
-    - name: Inverter Temperatuur
-      unit_of_measurement: 'C'
-      state: "{{ state_attr('sensor.inverter_goes', 'tempperature') | float  }}"
-    - name: PV energy today 
-      device_class: energy
-      state_class: measurement
-      unit_of_measurement: 'kWh'
-      state: "{{ state_attr('sensor.inverter_goes', 'eday') | float }}"
-      attributes: 
-        last_reset: '1970-01-01T00:00:00+00:00'
-    - name : PV energy total
-      device_class: energy
-      state_class: measurement
-      unit_of_measurement: 'kWh'
-      state: "{{ state_attr('sensor.inverter_goes', 'etotal') | float }}"
-      attributes: 
-        last_reset: '1970-01-01T00:00:00+00:00'
-#    pv_iday:
-#      value_template: '{{ states.sensor.inverter_goes.attributes.iday }}'
-#      unit_of_measurement: '€'
-#      friendly_name: "PV income day"
-#    pv_itotal:
-#  value_template: '{{ states.sensor.inverter_goes.attributes.itotal }}'
-#      unit_of_measurement: '€'
-#      friendly_name: "PV income total"
 
 ################################################
 ## Utility meter 
 ################################################
 utility_meter:
   pv_emonth:
-    source: sensors.pv_power_output
+    source: sensor.today_s_pv_generation
     cycle: monthly
-    
+
+  pv_eday:
+    source: sensor.today_s_pv_generation
+    cycle: daily
 ################################################
 ## Automation
 ################################################
 
+################################################
+## Sensor
+################################################
+sensor:
 
+- platform: template
+  sensors:
+    pv_actual:
+      friendly_name: "Actuele zonne-energie"
+      unit_of_measurement: W
+      value_template: >-
+        {% if is_state('sensor.pv_power' , 'unavailable')  %}
+          0.0
+        {% else %}
+          {{ states('sensor.pv_power') }}
+        {% endif %}
+
+    pv_today:
+      friendly_name: "Dagelijks Zonne-energie opbrengst"
+      unit_of_measurement: kWh
+      icon_template: mdi:solar-power-variant
+      value_template: >-
+        {% if is_state('sensor.today_s_pv_generation' , 'unavailable')  %}
+          {{ states('sensor.pv_eday') }}
+        {% else %}
+          {{ states('sensor.today_s_pv_generation') }}
+        {% endif %}

@@ -1,11 +1,11 @@
 substitutions:
-  display_name: Achtertuin
+  device_name: Achtertuin
 
 esphome:
   name: solar_weather
-  platform: ESP8266
-#  board: d1_mini_pro
-  board: d1_mini
+
+esp32:
+  board: nodemcu-32s
 
 wifi:
   ssid: !secret wifi_ssid
@@ -16,6 +16,7 @@ wifi:
 
 # Enable logging
 logger:
+
 
 mqtt:
   broker: !secret mqtt_broker
@@ -29,52 +30,95 @@ ota:
 
 i2c:
  - id: ic_1
-   sda: 4
-   scl: 5
+   sda: 21
+   scl: 22
    scan: true
    
 dallas:
-  - pin: GPIO13
+  - pin: GPIO4
+
+binary_sensor:
+  - platform: status
+    name: ${device_name} Status
 
 sensor:
+  - platform: wifi_signal
+    name: '${device_name} WiFi Signal'
+    update_interval: 30s
+    
   - platform: dallas
     address: 0x540215726CAEFF28
-    name: ${display_name} Temperatuur
-    
-  - platform: bme280
-    temperature:
-      name: ${display_name} Interne Temperatuur
-      oversampling: 4x
-    pressure:
-      name: ${display_name} Luchtdruk
-      oversampling: 4x
-    humidity:
-      name: ${display_name} Luchtvochtigheid
-      oversampling: 4x
+    name: ${device_name} Temperatuur
+
+  - platform: pulse_counter
+    name: "rain_gauge"
+    pin:
+      number: GPIO25
+      mode: INPUT_PULLUP    
+    update_interval: 25s
+    count_mode:
+      rising_edge: DISABLE
+      falling_edge: INCREMENT
+    unit_of_measurement: "mm"
+    icon: "mdi:water"
+    filters:
+      - multiply: 0.359254458
+      
+  - platform: pulse_meter
+    pin: 
+      number: GPIO14
+      mode: INPUT_PULLUP
+    name: '${device_name} Windsnelheidsmeter'
+    icon: 'mdi:weather-windy'
+    id: wind_meter
+    unit_of_measurement: 'm/s'
+    accuracy_decimals: 2
+    internal_filter: 13us
+    timeout: 5s
+    filters:
+      - multiply: 0.005560619
+      - sliding_window_moving_average:
+          window_size: 20
+          send_every: 20
+
+
+
+  - platform: bmp280
     address: 0x76
+    temperature:
+      name: ${device_name} Interne Temperatuur
+      oversampling: 16x
+    pressure:
+      name: ${device_name} Luchtdruk
+      oversampling: 16x
+    #humidity:
+    #  name: ${device_name} Luchtvochtigheid
     update_interval: 30s
 
   - platform: bh1750
-    name: ${display_name} Lux
+    name: ${device_name} Lux
     address: 0x23
-    update_interval: 25s
+    update_interval: 30s
+
+  - platform: ltr390
+    uv_index:
+      name: ${device_name} UV Index
+    uv:
+      name: ${device_name} UV
+    light:
+      name: ${device_name} Lux top
+    update_interval: 30s
 
   - platform: adc
-    pin: A0
-    id: "VCC"
-    name: ${display_name} Batterij
-    update_interval: 35s
-    filters:
-      - multiply: 5.265822784810127
-      
-  - platform: template
-    name: ${display_name} Batterij Level
-    unit_of_measurement: '%'
-    device_class: battery
-    update_interval: 25s
-    lambda: |-
-      return ((id(VCC).state -3) /1.2 * 100.00);
-
+    pin: GPIO33
+    name: ${device_name} Analogue Batt Value
+    id: analog_val
+    attenuation: auto
+  
 deep_sleep:
   run_duration: 40s
   sleep_duration: 4min
+  wakeup_pin: 25
+  wakeup_pin_mode: INVERT_WAKEUP
+  
+  

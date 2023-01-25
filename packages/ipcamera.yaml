@@ -1,8 +1,9 @@
 ################################################
 ## Packages / IP camera's
 ################################################
+homeassistant:
 
-
+delete:
 ################################################
 ## Input boolean
 ################################################
@@ -17,7 +18,7 @@ input_boolean:
     name: Camera1 Notify
 
 ################################################
-## Input boolean
+## Input text
 ################################################
 input_text:
   timestamp:
@@ -53,6 +54,7 @@ automation:
 ## Motion detected on camera straatkant
 ################################################
 - alias: "Motioneye - Camera1 - Motion started"
+  id: '300'
   description: ''
   mode: queued
   max: 3
@@ -89,6 +91,7 @@ automation:
 ## Motion detection endend on camera straatkant
 ################################################
 - alias: "Motioneye - Camera1 - Motion ended"
+  id: '301'
   trigger:
     platform: webhook
     webhook_id: motioneye-camera1-ended
@@ -102,6 +105,7 @@ automation:
 ## Enable motion detection on camera straatkant
 ################################################
 - alias: "Enable motion detection"
+  id: '302'
   trigger:
     - platform: state
       entity_id: input_boolean.camera1_motion_detection
@@ -114,6 +118,7 @@ automation:
 ## Disable motion detection on camera straatkant
 ################################################ 
 - alias: "Disable motion detection"
+  id: '303'
   trigger:
     - platform: state
       entity_id: input_boolean.camera1_motion_detection
@@ -126,6 +131,7 @@ automation:
 ## Notify when motion is detected on camera straatkant
 ################################################ 
 - alias: Notify me if there is movement in my camera1
+  id: '304'
   description: ''
   trigger: []
   condition: []
@@ -151,6 +157,7 @@ automation:
 ## Delete old snapshots after a month
 ################################################ 
 - alias: Delete files after a month
+  id: '305'
   trigger:
     platform: time
     at: "01:00:00"

@@ -11,14 +11,14 @@ notify:
   - platform: group
     name: family
     services:
-      - service: mobile_app_mi_a3
-      - service: mobile_app_sm_a405fn
+      - service: mobile_app_cph2399
+      - service: mobile_app_sm_a325f
   - platform: group
     name: Sander
     services:
-      - service: mobile_app_mi_a3
+      - service: mobile_app_cph2399
   - platform: group
     name: Sandra
     services:
-      - service: mobile_app_sm_a405fn
+      - service: mobile_app_sm_a325f
 

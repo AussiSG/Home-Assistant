@@ -15,7 +15,6 @@ wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_pass
   power_save_mode: none
-
  
 captive_portal:
 

@@ -15,6 +15,7 @@ homeassistant:
 automation:    
 ###### Schakel lichtslang schuur aan ######
 - alias: 'Schakel lichtslang aan bij schemer'
+  id: '600'
   trigger:
   - platform: numeric_state
     entity_id: sensor.achtertuin_lux
@@ -32,22 +33,23 @@ automation:
     - service: switch.turn_on
       data:
         entity_id:
-          - switch.wcd_schuurverlichting
+#          - switch.wcd_schuurverlichting
 ##############################################
 
 ###### Schakel lichtslang schuur uit ######
 - alias: "Schakel lichtslang uit"
+  id: '601'
   trigger:  
     - platform: time
       at: '03:00:00'     
     - platform: state
-      entity_id: switch.momentary_toggle_lights
-      to: "on" 
+      entity_id: input_boolean.lampen_ingeschakeld
+      to: "off" 
   action:
     - service: switch.turn_off
       data:
         entity_id:
-          - switch.wcd_schuurverlichting
+#          - switch.wcd_schuurverlichting
 ##############################################
 
 

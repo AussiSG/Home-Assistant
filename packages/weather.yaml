@@ -2,8 +2,47 @@
 ## Packages / Weather
 ################################################
 homeassistant:
-
-
+  customize:
+    sensor.achtertuin_windsnelheid_15m_gemiddeld:
+      templates:
+        icon: >
+          if (state < 13 ) return 'mdi:tailwind';
+          if (state > 12 ) return ' mdi:weather-windy';
+          if (state > 54 ) return 'mdi:weather-lightning-rainy';
+          if (state > 117 ) return 'mdi:weather-hurricane';
+          return 'mdi:tailwind';
+    sensor.achtertuin_windsnelheid_1u_gemiddeld:
+      templates:
+        icon: >
+          if (state < 13 ) return 'mdi:tailwind';
+          if (state > 12 ) return ' mdi:weather-windy';
+          if (state > 54 ) return 'mdi:weather-lightning-rainy';
+          if (state > 117 ) return 'mdi:weather-hurricane';
+          return 'mdi:tailwind';
+    sensor.achtertuin_windsnelheid_24u_gemiddeld:
+      templates:
+        icon: >
+          if (state < 13 ) return 'mdi:tailwind';
+          if (state > 12 ) return ' mdi:weather-windy';
+          if (state > 54 ) return 'mdi:weather-lightning-rainy';
+          if (state > 117 ) return 'mdi:weather-hurricane';
+          return 'mdi:tailwind';
+    sensor.achtertuin_Windsnelheid_1u_windvlaag:
+      templates:
+        icon: >
+          if (state < 13 ) return 'mdi:tailwind';
+          if (state > 12 ) return ' mdi:weather-windy';
+          if (state > 54 ) return 'mdi:weather-lightning-rainy';
+          if (state > 117 ) return 'mdi:weather-hurricane';
+          return 'mdi:tailwind';
+    sensor.achtertuin_Windsnelheid_24u_windvlaag:
+      templates:
+        icon: >
+          if (state < 13 ) return 'mdi:tailwind';
+          if (state > 12 ) return ' mdi:weather-windy';
+          if (state > 54 ) return 'mdi:weather-lightning-rainy';
+          if (state > 117 ) return 'mdi:weather-hurricane';
+          return 'mdi:tailwind';
 
 ################################################
 ## Inputs
@@ -25,52 +64,181 @@ sensor:
     value_template: 'last_changed: {{states.sensor.neerslag_buienalarm_regen_data.last_changed | default(now())}}'
     scan_interval: 240
 
-################################################
-## Binary sensor
-################################################
+  - platform: template
+    sensors:
+      weerstation_batterij_laag:
+        friendly_name: Weerstation batterij niveau te laag
+        value_template: >
+          {{ states('sensor.achtertuin_batterij_percentage') | float < 20.0 }}
+        availability_template: >
+          {{ states('sensor.achtertuin_batterij_percentage') not in ['unavailable', 'unknown'] }}
 
-# #binary_sensor:
-#   - platform: template
-#     sensors:
-#       weather_state:
-#         value_template: >-
-#           {{ is_state("input_boolean.temperatuursverandering", "on") }}
-#         icon_template: >-
-#           {% if is_state('weather.overvecht', 'clear-night') %}
-#             mdi:weather-night
-#           {% elif is_state('weather.overvecht', 'cloudy') %}
-#             mdi:weather-cloudy
-#           {% elif is_state('weather.overvecht', 'fog') %}
-#             mdi:weather-fog  
-#           {% elif is_state('weather.overvecht', 'hail') %}
-#             mdi:weather-hail  
-#           {% elif is_state('weather.overvecht', 'lightning') %}
-#             mdi:weather-lightning     
-#           {% elif is_state('weather.overvecht', 'lightning-rainy') %}
-#             mdi:weather-lightning-rainy     
-#           {% elif is_state('weather.overvecht', 'partlycloudy') %}
-#             mdi:weather-partly-cloudy    
-#           {% elif is_state('weather.overvecht', 'pouring') %}
-#             mdi:weather-pouring   
-#           {% elif is_state('weather.overvecht', 'rainy') %}
-#             mdi:weather-rainy     
-#           {% elif is_state('weather.overvecht', 'snowy') %}
-#             mdi:weather-snowy    
-#           {% elif is_state('weather.overvecht', 'snowy-rainy') %}
-#             mdi:weather-snowy-rainy    
-#           {% elif is_state('weather.overvecht', 'sunny') %}
-#             mdi:weather-sunny  
-#           {% elif is_state('weather.overvecht', 'windy') %}
-#             mdi:weather-windy                
-#           {% elif is_state('weather.overvecht', 'windy-variant') %}
-#             mdi:weather-windy-variant     
-#           {% else %}
-#             mdi:weather-cloudy-alert                                      
-#           {% endif %}
-#         attribute_templates:
-#           Temperatuur: >
-#             {{ state_attr('weather.overvecht', 'temperature') }}
+  - platform: template
+    sensors:
+      weerstation_batterij_opgeladen:
+        friendly_name: Weerstation achtertuin batterij opgeladen
+        value_template: > 
+          {{ states('sensor.achtertuin_batterij_percentage') | float >= 80.0 }}
+        availability_template: >
+          {{ states('sensor.achtertuin_batterij_percentage') not in ['unavailable', 'unknown'] }}
 
+
+
+##########################################################
+## Backyard wind speed data
+##########################################################
+  - platform: statistics
+    name: Achtertuin Windsnelheid 1u Windvlaag
+    entity_id: sensor.windsnelheid_km_h
+    state_characteristic: value_max
+    sampling_size: 999
+    precision: 2
+    max_age:
+      hours: 1
+
+  - platform: statistics
+    name: Achtertuin Windsnelheid 24u Windvlaag
+    entity_id: sensor.windsnelheid_km_h
+    state_characteristic: value_max
+    sampling_size: 999
+    precision: 2
+    max_age:
+      hours: 24
+
+  - platform: statistics
+    name: Achtertuin Windsnelheid 24u Gemiddeld
+    entity_id: sensor.windsnelheid_km_h
+    state_characteristic: average_linear
+    sampling_size: 999
+    precision: 2
+    max_age:
+      hours: 24
+
+  - platform: statistics
+    name: Achtertuin Windsnelheid 1u Gemiddeld
+    entity_id: sensor.windsnelheid_km_h
+    state_characteristic: average_linear
+    sampling_size: 999
+    precision: 2
+    max_age:
+      hours: 1
+      
+  - platform: statistics
+    name: Achtertuin Windsnelheid 15m Gemiddeld
+    entity_id: sensor.windsnelheid_km_h
+    state_characteristic: average_linear
+    sampling_size: 999
+    precision: 2
+    max_age:
+      minutes: 15
+
+################################################
+## Template
+################################################    
+template:
+  - sensor:
+      - name: Windsnelheid km/h
+        unit_of_measurement: "km/h"
+        state: >
+          {{ (states('sensor.achtertuin_windsnelheidsmeter') | float  * 3.6) |round(2) }}   
+        icon: >
+          {% if not is_state('sensor.achtertuin_windsnelheidsmeter', 'unavailable') and not is_state('sensor.achtertuin_windsnelheidsmeter', 'unknown') %}
+            {% if states('sensor.achtertuin_windsnelheidsmeter')|float < 13 %}
+              mdi:tailwind
+            {% elif states('sensor.achtertuin_windsnelheidsmeter')|float > 12 and states('sensor.achtertuin_windsnelheidsmeter')|float < 55 %}
+              mdi:weather-windy
+            {% elif states('sensor.achtertuin_windsnelheidsmeter')|float > 54 and states('sensor.achtertuin_windsnelheidsmeter')|float < 117 %}
+              mdi:weather-lightning-rainy
+            {% elif states('sensor.achtertuin_windsnelheidsmeter')|float > 117 %}
+              mdi:weather-hurricane
+            {% else %}
+            mdi:tailwind
+            {% endif %}
+          {% else %}
+            mdi:tailwind
+          {% endif %}   
+
+      - name: Beaufort Wind Schaal
+        state: >
+          {% if not is_state('sensor.achtertuin_windsnelheid_15m_gemiddeld', 'unavailable') and not is_state('sensor.achtertuin_windsnelheid_15m_gemiddeld', 'unknown') %}
+            {% if states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float < 1 %}
+              Stil
+            {% elif states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float > 0 and states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float < 6 %}
+              Zeer Zwak
+            {% elif states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float > 5 and states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float < 12 %}
+              Zwak
+            {% elif states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float > 11 and states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float < 20 %}
+              Vrij Matig
+            {% elif states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float > 19 and states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float < 28 %}
+              Matig
+            {% elif states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float > 27 and states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float < 39 %}
+              Vrij Krachtig
+            {% elif states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float > 38 and states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float < 50 %}
+              Krachtig
+            {% elif states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float > 49 and states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float < 62 %}
+              Hard
+            {% elif states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float > 61 and states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float < 75 %}
+              Stormachtig
+            {% elif states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float > 74 and states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float < 89 %}
+              Storm
+            {% elif states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float > 88 and states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float < 103 %}
+              Zware storm
+            {% elif states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float > 104 and states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float < 118 %}
+              Zeer Zware Storm
+            {% elif states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float > 117 %}
+              Orkaan
+            {% else %}
+              Stil
+            {% endif %}
+          {% else %}
+            Stil
+          {% endif %}
+        icon: >
+          {% if not is_state('sensor.achtertuin_windsnelheid_15m_gemiddeld', 'unavailable') and not is_state('sensor.achtertuin_windsnelheid_15m_gemiddeld', 'unknown') %}
+            {% if states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float < 13 %}
+              mdi:tailwind
+            {% elif states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float > 12 and states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float < 55 %}
+              mdi:weather-windy
+            {% elif states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float > 54 and states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float < 117 %}
+              mdi:weather-lightning-rainy
+            {% elif states('sensor.achtertuin_windsnelheid_15m_gemiddeld')|float > 117 %}
+              mdi:weather-hurricane
+            {% else %}
+            mdi:tailwind
+            {% endif %}
+          {% else %}
+            mdi:tailwind
+          {% endif %}      
+
+      - name: "Achtertuin batterij voltage"
+        unit_of_measurement: "V"
+        state: >- 
+          {% set max_bat_volt = 4.2 | float %}
+          {% set max_measured_volt = 3.3 | float %}
+          {% set ratio = max_bat_volt / max_measured_volt | float %}
+          {{ (states('sensor.achtertuin_analogue_batt_value') | float  * ratio) |round(2) }}   
+  
+      - name: "Achtertuin batterij percentage"
+        unit_of_measurement: "%"
+        device_class: battery
+        
+        ## Linear equation matching the percentage drop of 18650 battery.
+        state: >-
+          {% set max_bat_volt = ((110.55*states('sensor.achtertuin_batterij_voltage') | float) - 360.65) |round(2) %}
+          {% if max_bat_volt < 0.0 %}
+            0.0
+          {% else %}
+            {{ max_bat_volt }} 
+          {% endif %}
+          
+################################################
+## Utility meter 
+################################################
+utility_meter:
+  daily_rain:
+    name: Dagelijks neerslag
+    source: sensor.rain_gauge
+    cycle: daily
 
 ################################################
 ## Automation
@@ -92,3 +260,46 @@ automation:
 #     - delay: '00:00:30'
 #     - service: input_boolean.turn_off
 #       entity_id: input_boolean.temperatuursverandering
+
+######### Schakel WCD om weerstation op te laden of te ontloaden
+- alias: Schakel WCD schuur voor weerstation
+  id: '1400'
+  trigger:
+    - platform: state
+      entity_id: sensor.weerstation_batterij_laag
+      id: batterij_leeg
+      from: 'False'
+      to: 'True'
+      for:
+        minutes: 30
+    - platform: state
+      entity_id: sensor.weerstation_batterij_opgeladen
+      id: batterij_vol
+      from: 'False'
+      to: 'True'
+      for:
+        hours: 6
+  condition:
+    - condition: numeric_state
+      entity_id: sensor.ha_uptime_min
+      above: 30.0 
+  action:
+    - choose:       
+      - conditions:
+          condition: trigger
+          id: batterij_leeg
+        sequence:
+          - service: switch.turn_on
+            data:
+              entity_id:
+                - switch.wcd_schuurverlichting
+      - conditions:
+          condition: trigger
+          id: batterij_vol
+        sequence:
+          - service: switch.turn_off
+            data:
+              entity_id:
+                - switch.wcd_schuurverlichting
+      default:
+          []

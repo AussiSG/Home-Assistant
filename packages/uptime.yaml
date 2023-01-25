@@ -7,12 +7,28 @@ homeassistant:
 ## Sensors
 ################################################
 sensor:
-- platform: uptime
-  name: 'HA uptime moment'
 
 - platform: template
   sensors:
+
+
     ha_uptime_min:
       friendly_name: 'HA uptime minutes'
       value_template: >
         {{ (as_timestamp(now()) - as_timestamp(states('sensor.ha_uptime_moment'))) / 60.0 }}
+
+    uptime_days:
+      friendly_name: 'HA uptime'
+      value_template: >-
+        {% set uptime = states('sensor.ha_uptime_min')|float %}
+        {% set days = uptime/60/24 %}
+        {% set up_dys = days|int %}
+        {% set hours = (days-up_dys)*24 %}
+        {% set up_hrs = hours|int %}
+        {% set up_mns = ((hours-up_hrs)*60)|int %}
+        {{ up_dys }} dagen, {{ up_hrs }} uren, {{ up_mns }} mins geleden
+    
+    last_boot_days:
+      friendly_name: 'Laatste keer opgestart'
+      value_template: >
+        {{ ((as_timestamp(now()) - as_timestamp(states('sensor.last_boot'))) / (24.0*60.0*60.0)) | round(0) }} dagen geleden

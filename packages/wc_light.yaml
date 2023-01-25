@@ -52,6 +52,7 @@ automation:
 ## Schakel de WC verlichting in
 ################################################
 - alias: 'Schakel verlichting in op WC'
+  id: '1300'
   trigger:
     platform: state
     entity_id: binary_sensor.wc_pir_occupancy
@@ -62,8 +63,8 @@ automation:
     conditions: 
       - condition: state
         entity_id: binary_sensor.wc_deur_contact
-        # 'on' state means door is openend
-        state: 'on'
+        state: "on"
+      # 'on' state means door is openend
       - condition: state
         entity_id: switch.wc_schakelaar
         state: "off"
@@ -79,6 +80,7 @@ automation:
 ## Schakel de WC verlichting uit
 ################################################
 - alias: 'Schakel verlichting uit op WC'
+  id: '1301'
   trigger:
     platform: state
     entity_id: binary_sensor.wc_deur_contact
@@ -103,6 +105,7 @@ automation:
 ## Annuleer maximale timer bij beweging
 ################################################
 - alias: 'Annuleer timer bij beweging in wc'
+  id: '1302'
   trigger:
     platform: state
     entity_id: binary_sensor.wc_pir_occupancy
@@ -121,6 +124,7 @@ automation:
 ## Start timer weer bij einde beweging op wc
 ################################################
 - alias: 'Start timer weer bij einde beweging in wc'
+  id: '1303'
   trigger:
     platform: state
     entity_id: binary_sensor.wc_pir_occupancy
@@ -139,6 +143,7 @@ automation:
 ## Schakel de WC verlichting uit door maximale timer
 ################################################
 - alias: 'Schakel verlichting uit op WC maximale tijd'
+  id: '1304'
   trigger:
     - platform: event
       event_type: timer.finished

@@ -20,6 +20,7 @@ automation:
 # Switch on living room lights when on vacation and it turns dark outside
 ################################################
 - alias: 'Schakel verlichting in tijdens vakantie'
+  id: '1200'
   trigger:
     # Tuin licht sensor
     - platform: numeric_state
@@ -41,6 +42,7 @@ automation:
 # Switch off livings room lights in vacation mode
 ################################################
 - alias: 'Schakel verlichting uit tijdens vakantie'
+  id: '1201'
   trigger:
     - platform: time
       at: '22:30:00'
@@ -63,6 +65,7 @@ automation:
 # Switch on notifcations for IP camera in vacation mode
 ################################################
 - alias: 'Schakel berichten in tijdens vakantie'
+  id: '1202'
   trigger: 
     - platform: state
       entity_id: input_boolean.vakantie
@@ -76,6 +79,7 @@ automation:
 # Switch off notifcations for IP camera in vacation mode
 ################################################
 - alias: 'Schakel berichten uit tijdens vakantie'
+  id: '1203'
   trigger: 
     - platform: state
       entity_id: input_boolean.vakantie

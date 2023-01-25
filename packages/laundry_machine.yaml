@@ -12,9 +12,6 @@ homeassistant:
     sensor.energie_wasmachine_power:
       friendly_name: Verbruik
       icon: mdi:eye-outline
-    sensor.energie_wasmachine_daily_energy:
-      friendly_name: Dagelijks verbruik
-      icon: mdi:eye-outline
 ################################################
 ## Inputs
 ################################################
@@ -32,7 +29,7 @@ sensor:
   sensors:
     wasmachine_afgerond:
       friendly_name: Wasmachine klaar
-      value_template: "{{ states('sensor.energie_wasmachine_power') | float < 3.0 }}"
+      value_template: "{{ states('sensor.energie_wasmachine_power') | float < 2.0 }}"
 
 - platform: template
   sensors:
@@ -44,12 +41,14 @@ sensor:
 ## Automation
 ################################################
 
+
 automation:
 
 ################################################
 ## Laundry machine has started
 ################################################  
 - alias: 'Wasmachine gestart'
+  id: '400'
   trigger:
     platform: state
     entity_id: sensor.wasmachine_actief
@@ -60,10 +59,13 @@ automation:
     entity_id: input_boolean.wasmachine_ingeschakeld
 ################################################ 
 
+
+
 ################################################
 ## Laundry machine finished , send notification
 ################################################  
 - alias: 'Wasmachine klaar + notify'
+  id: '401'
   trigger:
     platform: state
     entity_id: sensor.wasmachine_afgerond

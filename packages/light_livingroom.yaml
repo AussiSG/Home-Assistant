@@ -11,17 +11,7 @@ homeassistant:
     switch.momentary_toggle_lights:
       friendly_name: Alle lampen schakelen
       icon: mdi:lightbulb-group-outline
-
-################################################
-## Momentary switch
-################################################
-switch:
-  - platform: momentary
-    name: toggle lights
-    mode: on
-    toggle_for: 5
-    cancellable: True
-  
+       
 ################################################
 ## Light group
 ################################################    
@@ -33,77 +23,167 @@ light:
       - light.lamp_tv
 
 ################################################
+## Input Boolean
+################################################    
+input_boolean:
+  lampen_ingeschakeld:
+    name: Alle lampen schakelen
+    icon: mdi:toggle-switch-outline
+  lampen_geschakeld_niet_thuis:
+    name: Lampen geschakeld niemand thuis 
+
+################################################
 ## Automation
 ################################################
 
 automation:    
-###### Schakel verlichting woonkamer ######
-- alias: "Schakel verlichting woonkamer in "
+
+##############################################
+# Switch on living room lights 
+##############################################
+- alias: "Schakel verlichting woonkamer in"
+  id: '500'
   trigger:
     # Tuin licht sensor
     - platform: numeric_state
+      id: beetje donker
       entity_id: sensor.achtertuin_lux
-      below: 15
+      below: 40 
+    - platform: numeric_state
+      id: donker
+      entity_id: sensor.achtertuin_lux
+      below: 25
+    - platform: numeric_state
+      id: heel donker
+      entity_id: sensor.achtertuin_lux
+      below: 10
+    # Woonkamer schakelaaar geschakeld  
+    - platform: state
+      id: woonkamer schakelaar
+      entity_id: sensor.woonkamerschakelaar_click
+      to: single
+    # tablet schakelaaar geschakeld  
+    - platform: state
+      id: tablet schakelaar
+      entity_id: input_boolean.lampen_ingeschakeld
+      to: "on"
   condition:
-    condition: and
-    conditions:
-    - condition: time
-      before: "22:00:00"
-      after:  "15:00:00"
     - condition: state
       entity_id: input_boolean.vakantie
       state: "off"
-  action:
-    - service: light.turn_on
-      data:
-        entity_id:
-          - light.woonkamer_lampen
-        brightness_pct: 75
-    - service: input_boolean.turn_on
-      entity_id: input_boolean.lampen_ingeschakeld
-##############################################
-
-
-##############################################
-# Living room lights to 75% via aqara switch
-##############################################
-- alias: Lampen woonkamer 75% via aqara drukknop
-  trigger:
-  - platform: state
-    entity_id: sensor.woonkamerschakelaar_click
-    to: single
-  - platform: state
-    entity_id: switch.momentary_toggle_lights
-    to: "on"
-  condition:
-    condition: and
-    conditions:
+    - condition: or
+      conditions:
       - condition: time
-        after: "16:00:00"
+        before: "22:00:00"
+        after:  "15:00:00"
+      - condition: time    
         before: "11:00:00"
-      - condition: numeric_state
-        entity_id: sensor.achtertuin_lux
-        below: 10         
-      - condition: state
-        entity_id: light.woonkamer_lampen
-        state: "off"   
-      - condition: state
-        entity_id: input_boolean.vakantie
-        state: "off"       
+        after:  "04:00:00"
+  action:
+    - choose:
+        - conditions:
+          # lampen aan bij beetje donker
+            - condition: trigger
+              id: beetje donker
+            - condition: state
+              entity_id: group.familie_aanwezig_tracker
+              state: "home"            
+          sequence:
+            - service: light.turn_on
+              data:
+                brightness_pct: 25
+              target:
+                entity_id: light.woonkamer_lampen
+            - service: input_boolean.turn_on
+              entity_id: input_boolean.lampen_ingeschakeld
+        # Lampen aan bij donker of via schakelaars       
+        - conditions:
+          - or:
+            - condition: trigger
+              id: donker
+            - condition: trigger
+              id: woonkamer schakelaar
+            - condition: trigger
+              id: tablet schakelaar
+          - and :
+            - condition: state
+              entity_id: group.familie_aanwezig_tracker
+              state: home
+          sequence:
+            - service: light.turn_on
+              data:
+                brightness_pct: 50
+              target:
+                entity_id: light.woonkamer_lampen
+            - service: input_boolean.turn_on
+              entity_id: input_boolean.lampen_ingeschakeld
+        - conditions:
+          # lampen aan bij heel donker
+            - condition: trigger
+              id: heel donker
+            - condition: state
+              entity_id: group.familie_aanwezig_tracker
+              state: "home"    
+            - condition: state
+              entity_id:
+                - sensor.x_mas_active
+              state: "False"
+          sequence:
+            - service: light.turn_on
+              data:
+                brightness_pct: 75
+              target:
+                entity_id: light.woonkamer_lampen
+            - service: input_boolean.turn_on
+              entity_id: input_boolean.lampen_ingeschakeld
+        - conditions:
+          # Schakel input boolean wanneer niemand thuis is
+            - condition: not
+              conditions:
+                - condition: state
+                  entity_id: group.familie_aanwezig_tracker
+                  state: "home"
+          sequence:
+            - service: input_boolean.turn_on
+              target:
+                entity_id: input_boolean.lampen_geschakeld_niet_thuis              
+
+##############################################
+# Switch on living room lights after door open
+##############################################
+- alias: Schakel woonkamer lampen in na niet thuis te zijn geweest
+  id: '502'                
+  trigger:
+    - platform: state
+      entity_id:
+        - binary_sensor.voordeur_contact
+      to: "on"
+    - platform: state
+      entity_id:
+        - binary_sensor.schuifpui_contact
+      to: "on"
+  condition:
+    - condition: state
+      entity_id: input_boolean.lampen_geschakeld_niet_thuis
+      state: "on"
   action:
     - service: light.turn_on
       data:
-        entity_id:
-          - light.woonkamer_lampen
-        brightness_pct: 75
+        brightness: 75
+      target:
+        entity_id: light.woonkamer_lampen
+    - service: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.lampen_geschakeld_niet_thuis
     - service: input_boolean.turn_on
-      entity_id: input_boolean.lampen_ingeschakeld
-##############################################        
-    
+      target:
+        entity_id: input_boolean.lampen_ingeschakeld    
+
 ##############################################
 # Switch off living room lights
 ##############################################
 - alias: Schakel woonkamer lampen uit
+  id: '505'
   trigger:
   # Smart swicht on 1e floor  
   - entity_id: sensor.woonkamerschakelaar_click
@@ -111,8 +191,8 @@ automation:
     to: double
   # Toggle switch on tablet
   - platform: state
-    entity_id: switch.momentary_toggle_lights
-    to: "on" 
+    entity_id: input_boolean.lampen_ingeschakeld
+    to: "off" 
   # Zonsopkomst 
   - platform: numeric_state
     entity_id: sun.sun
@@ -121,13 +201,10 @@ automation:
   # Tuin licht sensor  
   - platform: numeric_state
     entity_id: sensor.achtertuin_lux
-    above: 30 
+    above: 40 
   condition:
     condition: and
-    conditions:
-    - condition: state
-      entity_id: light.woonkamer_lampen
-      state: "on"  
+    conditions: 
     - condition: state
       entity_id: input_boolean.vakantie
       state: "off"  
@@ -138,3 +215,5 @@ automation:
           - light.woonkamer_lampen
     - service: input_boolean.turn_off
       entity_id: input_boolean.lampen_ingeschakeld
+    - service: input_boolean.turn_off
+      entity_id: input_boolean.lampen_geschakeld_niet_thuis

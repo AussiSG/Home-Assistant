@@ -19,9 +19,7 @@ homeassistant:
     sensor.terrarium_uv_lamp_power:
       friendly_name: Verbruik
       icon: mdi:eye-outline
-    sensor.terrarium_uv_lamp_daily_energy:
-      friendly_name: Dagelijks verbruik
-      icon: mdi:eye-outline
+
     
     switch.terrarium_warmtelamp_relay:
       friendly_name: Warmtelamp
@@ -34,9 +32,6 @@ homeassistant:
       icon: mdi:flash-outline
     sensor.terrarium_warmtelamp_power:
       friendly_name: Verbruik
-      icon: mdi:eye-outline
-    sensor.terrarium_warmtelamp_daily_energy:
-      friendly_name: Dagelijks verbruik
       icon: mdi:eye-outline
 
     switch.terrarium_fogger_relay:
@@ -51,9 +46,7 @@ homeassistant:
     sensor.terrarium_fogger_power:
       friendly_name: Verbruik
       icon: mdi:eye-outline
-    sensor.terrarium_fogger_daily_energy:
-      friendly_name: Dagelijks verbruik
-      icon: mdi:eye-outline
+
 
     sensor.terrarium_battery_level_links:
         friendly_name: Terrarium batterij niveau links
@@ -71,7 +64,7 @@ input_number:
     mode: box
   max_temperatuur:
     name: 'Maximale temperatuur'
-    initial: 36
+    initial: 34
     min: 0
     max: 40
   min_temperatuur:
@@ -124,7 +117,7 @@ template:
         {% if states('sensor.terrarium_luchtvochtigheid_links')|float == 0 or states('sensor.terrarium_luchtvochtigheid_rechts')|float == 0 %}
           {{ states('sensor.gemiddelde_luchtvochtigheid_terrarium') }}
         {% else %}
-          {{ ( (states('sensor.terrarium_luchtvochtigheid_links')|float + states('sensor.terrarium_luchtvochtigheid_rechts')|float / 2 ) | round(2, default=0) ) }}
+          {{ ( (states('sensor.terrarium_luchtvochtigheid_links')|float + states('sensor.terrarium_luchtvochtigheid_rechts')|float ) / 2 ) | round(2, default=0)  }}
         {% endif %}
  
 ################################################
@@ -135,6 +128,7 @@ automation:
 
 ###Activeer zomertijd tijden## 
 - alias: "Activeer de zomertijden voor terrarium"
+  id: '800'
   trigger:
     - platform: homeassistant
       event: start
@@ -172,6 +166,7 @@ automation:
 
 ###schakel watersproeier in voor xx tijd## 
 - alias: "Schakel watersproeier xx second in"
+  id: '801'
   trigger:
     platform: template
     value_template: "{{ states('sensor.time') == ((state_attr('input_datetime.uv_lamp_aan', 'timestamp') - (15*60)) | int | timestamp_custom('%H:%M', False)) 
@@ -194,6 +189,7 @@ automation:
 
 ###schakel watersproeier uit bij te lang sproeien## 
 - alias: "Schakel watersproeier uit na te lang sproeien"
+  id: '802'
   trigger:
     platform: event
     event_type: timer.finished
@@ -206,6 +202,7 @@ automation:
       
 ###### Schakel terrarium verlichting in ######
 - alias: "Terrarium verlichting aan"
+  id: '803'
   trigger:
     platform: template
     value_template: "{{ states('sensor.time') == (state_attr('input_datetime.uv_lamp_aan', 'timestamp') | int | timestamp_custom('%H:%M', False)) }}"
@@ -218,6 +215,7 @@ automation:
 
 ###### Schakel terrarium verlichting uit ######
 - alias: "Terrarium verlichting uit"
+  id: '804'
   trigger:
     platform: template
     value_template: "{{ states('sensor.time') == (state_attr('input_datetime.uv_lamp_uit', 'timestamp') | int | timestamp_custom('%H:%M', False)) }}"
@@ -230,6 +228,7 @@ automation:
           
 ####### Schakel terrarium warmtelamp in ######
 - alias: "Terrarium warmtelamp aan"
+  id: '805'
   trigger:
     platform: template
     value_template: "{{ states('sensor.time') == ((state_attr('input_datetime.uv_lamp_aan', 'timestamp') + (30*60)) | int | timestamp_custom('%H:%M', False)) }}"
@@ -242,6 +241,7 @@ automation:
 
 ####### Schakel terrarium warmtelamp in ######
 - alias: "Terrarium warmtelamp aan temperatuur te laag"
+  id: '806'
   trigger:
     platform: numeric_state
     entity_id: sensor.terrarium_temperatuur_rechts
@@ -260,7 +260,9 @@ automation:
 
 ###### Schakel terrarium warmtelamp uit ######
 - alias: "Terrarium warmtelamp uit"
+  id: '807'
   trigger:
+  ## Schakel warmte lamp uit op tijd  
   - platform: template
     value_template: "{{ states('sensor.time') == ((state_attr('input_datetime.uv_lamp_uit', 'timestamp') - (30*60)) | int | timestamp_custom('%H:%M', False)) }}"
   ## temperatuur te warm voor langere periode
@@ -278,6 +280,7 @@ automation:
 
 ###### Schakel terrarium fogger aan ######
 - alias: "Schakel Terrarium fogger aan"
+  id: '808'
   trigger:
     #Schakel fogger in op tijd
     - platform: template
@@ -294,6 +297,7 @@ automation:
 
 ###### Schakel terrarium fogger aan lage luchtvochtigheid ######
 - alias: "Schakel Terrarium fogger aan lage LV"
+  id: '809'
   trigger:
     #Schakel fogger in op lage LV  
     - platform: numeric_state
@@ -319,6 +323,7 @@ automation:
 
 ###### Schakel terrarium fogger uit ######
 - alias: "Terrarium fogger uit"
+  id: '810'
   trigger:
     # Luchtvochtigheid bereikt
     - platform: numeric_state
